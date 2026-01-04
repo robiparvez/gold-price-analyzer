@@ -3,11 +3,11 @@ Historical Gold Price Scraper for Bangladesh Sources
 Extends the existing scraper with historical data fetching capabilities
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 
 import duckdb
-import httpx
 import pandas as pd
 
 from scraper import GoldPriceScraper
@@ -31,81 +31,6 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
             timeout: Request timeout in seconds
         """
         super().__init__(data_dir, timeout)
-
-        # Historical data sources
-        self.historical_sources = {
-            "sakib_dev": {
-                "url": "https://gold-price.sakib.dev/api/gold-price",
-                "type": "api",
-                "description": "Sakib.dev Gold Price API",
-            }
-        }
-
-    async def fetch_sakib_dev_data(self, days: int = 365) -> pd.DataFrame:
-        """
-        Fetch historical data from Sakib.dev API.
-
-        Args:
-            days: Number of days of historical data to fetch
-
-        Returns:
-            DataFrame with historical price data
-        """
-        try:
-            logger.info("Fetching historical data from Sakib.dev API...")
-
-            # Calculate date range
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=days)
-
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                # Try to fetch data from Sakib.dev API
-                response = await client.get(
-                    self.historical_sources["sakib_dev"]["url"],
-                    headers=self.headers,
-                    params={
-                        "start_date": start_date.strftime("%Y-%m-%d"),
-                        "end_date": end_date.strftime("%Y-%m-%d"),
-                        "format": "json",
-                    },
-                )
-
-                if response.status_code == 200:
-                    # Check if response has content
-                    if not response.text or response.text.strip() == "":
-                        logger.warning("Sakib.dev API returned empty response")
-                        return pd.DataFrame()
-
-                    try:
-                        data = response.json()
-                    except ValueError:
-                        logger.warning("Sakib.dev API returned invalid JSON")
-                        return pd.DataFrame()
-
-                    # Convert to DataFrame
-                    if isinstance(data, list):
-                        df = pd.DataFrame(data)
-                    elif isinstance(data, dict) and "data" in data:
-                        df = pd.DataFrame(data["data"])
-                    else:
-                        logger.warning("Unexpected API response format from Sakib.dev")
-                        return pd.DataFrame()
-
-                    # Standardize column names
-                    df = self._standardize_historical_data(df, source="sakib_dev")
-                    logger.info(
-                        f"Successfully fetched {len(df)} records from Sakib.dev"
-                    )
-                    return df
-                else:
-                    logger.warning(
-                        f"Sakib.dev API returned status {response.status_code}"
-                    )
-
-        except Exception as e:
-            logger.error(f"Error fetching Sakib.dev data: {e}")
-
-        return pd.DataFrame()
 
     def generate_synthetic_historical_data(self, days: int = 365) -> pd.DataFrame:
         """
@@ -325,49 +250,6 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
             logger.error(f"Error detecting and filling gaps: {e}")
             return df
 
-    async def sync_sakib_dev_daily(self) -> bool:
-        """
-        Perform daily sync with Sakib.dev API and auto-fill gaps.
-        Part of the hybrid sync engine.
-
-        Returns:
-            True if sync successful, False otherwise
-        """
-        try:
-            logger.info("Starting daily Sakib.dev sync with auto-fill...")
-
-            # Fetch latest data
-            new_data = await self.fetch_sakib_dev_data(days=30)
-
-            if new_data.empty:
-                logger.warning("No new data from Sakib.dev")
-                return False
-
-            # Load existing data
-            existing_data = self.load_historical_data(source="csv", days=90)
-
-            if not existing_data.empty:
-                # Combine with existing data
-                combined = pd.concat([existing_data, new_data], ignore_index=True)
-                combined = combined.drop_duplicates(
-                    subset=["date", "purity", "metal"], keep="last"
-                )
-            else:
-                combined = new_data
-
-            # Detect and fill gaps
-            filled_data = self.detect_and_fill_gaps(combined)
-
-            # Save updated data
-            self.save_historical_data(filled_data)
-
-            logger.info("Daily sync and auto-fill complete")
-            return True
-
-        except Exception as e:
-            logger.error(f"Error in daily sync: {e}")
-            return False
-
     async def fetch_all_historical_data(
         self, days: int = 365, use_synthetic: bool = True
     ) -> pd.DataFrame:
@@ -385,13 +267,8 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
 
         all_data = []
 
-        # Try Sakib.dev API first
-        try:
-            sakib_data = await self.fetch_sakib_dev_data(days)
-            if not sakib_data.empty:
-                all_data.append(sakib_data)
-        except Exception as e:
-            logger.error(f"Failed to fetch Sakib.dev data: {e}")
+        # Note: Sakib.dev API integration removed as the service only provides
+        # a web interface, not a JSON API. Using synthetic data generation instead.
 
         # Combine data from all sources
         if all_data:
@@ -412,9 +289,7 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
 
         # Use synthetic data if no real data available and allowed
         if combined_df.empty and use_synthetic:
-            logger.info(
-                "No historical data available from external sources, generating synthetic data as fallback"
-            )
+            logger.info("Generating synthetic historical data for analysis")
             combined_df = self.generate_synthetic_historical_data(days)
 
         return combined_df
@@ -542,3 +417,33 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
             logger.error(f"Error saving to DuckDB: {e}")
 
         return str(csv_path)
+
+
+async def main():
+    """Example usage of the HistoricalGoldPriceScraper."""
+    scraper = HistoricalGoldPriceScraper()
+
+    # Fetch historical data
+    historical_df = await scraper.fetch_all_historical_data(days=90)
+
+    if not historical_df.empty:
+        # Save historical data
+        saved_path = scraper.save_historical_data(historical_df)
+        print(f"Historical data saved to: {saved_path}")
+
+        # Display summary
+        print("\nHistorical Data Summary:")
+        print(f"Records: {len(historical_df)}")
+        print(
+            f"Date range: {historical_df['date'].min()} to {historical_df['date'].max()}"
+        )
+        print(
+            f"Price range: ৳{historical_df['price_bdt_per_gram'].min():,.0f} - ৳{historical_df['price_bdt_per_gram'].max():,.0f}"
+        )
+        print(f"Sources: {', '.join(historical_df['source'].unique())}")
+    else:
+        print("No historical data could be fetched")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

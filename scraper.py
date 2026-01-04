@@ -195,10 +195,17 @@ class GoldPriceScraper:
             Path to saved CSV file
         """
         if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"gold_prices_{timestamp}.csv"
+            date_str = datetime.now().strftime("%Y%m%d")
+            filename = f"gold_prices_{date_str}.csv"
 
         csv_path = self.data_dir / filename
+
+        # Check if file already exists for today
+        if csv_path.exists():
+            logger.info(
+                f"CSV file for today already exists: {csv_path}. Skipping save."
+            )
+            return str(csv_path)
 
         try:
             # Combine gold and silver data
@@ -268,7 +275,7 @@ class GoldPriceScraper:
                 for price_entry in prices:
                     conn.execute(
                         """
-                        INSERT OR IGNORE INTO prices
+                        INSERT INTO prices
                         (id, metal, purity, purity_raw, price_bdt_per_gram, price_raw, timestamp, date)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
@@ -387,3 +394,16 @@ class GoldPriceScraper:
                 latest_prices[purity] = price
 
         return latest_prices
+
+
+if __name__ == "__main__":
+    scraper = GoldPriceScraper()
+    price_data, saved_files = scraper.scrape_and_save()
+    print(f"Scraped {sum(len(prices) for prices in price_data.values())} price entries")
+    print(f"Saved to: {', '.join(saved_files)}")
+
+    # Get simplified latest prices
+    latest = scraper.get_latest_prices()
+    print("\nLatest Gold Prices:")
+    for purity, price in latest.items():
+        print(f"  {purity}: ৳{price:,.0f}/gram")

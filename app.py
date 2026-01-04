@@ -20,6 +20,7 @@ from jewelry_pricing import JewelryPricingCalculator, format_price_breakdown
 from logging_config import setup_logging
 from pdf_report_generator import generate_simple_report
 from scraper import GoldPriceScraper
+from utils import format_price_bdt
 
 # Setup logging
 setup_logging()
@@ -33,8 +34,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        "Get Help": "https://github.com/robiparvez/ml-gold-price-analyzer",
-        "Report a bug": "https://github.com/robiparvez/ml-gold-price-analyzer/issues",
+        "Get Help": "https://github.com/robiparvez/gold-price-analyzer",
+        "Report a bug": "https://github.com/robiparvez/gold-price-analyzer/issues",
         "About": "# Gold Price Analyzer\\nProfessional ML-powered gold price forecasting with investment tracking, jewelry pricing calculator, and comprehensive backtesting.",
     },
 )
@@ -219,7 +220,7 @@ def display_metric_cards(stats: dict) -> None:
         current_price = stats.get("current_price", 0)
         st.metric(
             label="Current Price",
-            value=f"৳{current_price:,.0f}",
+            value=format_price_bdt(current_price, decimals=0),
             help="Current price per gram in BDT",
         )
 
@@ -228,7 +229,7 @@ def display_metric_cards(stats: dict) -> None:
         daily_change_pct = stats.get("daily_change_percent", 0)
         st.metric(
             label="Daily Change",
-            value=f"৳{abs(daily_change):,.0f}",
+            value=format_price_bdt(abs(daily_change), decimals=0),
             delta=f"{daily_change_pct:+.2f}%",
             help="Change from previous day",
         )
@@ -238,7 +239,7 @@ def display_metric_cards(stats: dict) -> None:
         weekly_change_pct = stats.get("weekly_change_percent", 0)
         st.metric(
             label="Weekly Change",
-            value=f"৳{abs(weekly_change):,.0f}",
+            value=format_price_bdt(abs(weekly_change), decimals=0),
             delta=f"{weekly_change_pct:+.2f}%",
             help="Change from one week ago",
         )
@@ -248,7 +249,7 @@ def display_metric_cards(stats: dict) -> None:
         volatility = stats.get("price_volatility", 0)
         st.metric(
             label="Average Price",
-            value=f"৳{avg_price:,.0f}",
+            value=format_price_bdt(avg_price, decimals=0),
             delta=f"σ {volatility:,.0f}",
             delta_color="off",
             help="Historical average price and volatility (standard deviation)",
@@ -272,7 +273,7 @@ def display_forecast_metrics(forecast_results: dict) -> None:
         tomorrow_price = tomorrow_forecast.get("predicted_price", 0)
         st.metric(
             label="Tomorrow's Price",
-            value=f"৳{tomorrow_price:,.0f}",
+            value=format_price_bdt(tomorrow_price, decimals=0),
             help="Predicted price for tomorrow",
         )
 
@@ -289,7 +290,7 @@ def display_forecast_metrics(forecast_results: dict) -> None:
 
         st.metric(
             label="Week-End Price",
-            value=f"৳{week_price:,.0f}",
+            value=format_price_bdt(week_price, decimals=0),
             delta=f"{week_change_pct:+.2f}%",
             help="Predicted price at end of 7-day period",
         )
@@ -309,7 +310,7 @@ def display_forecast_metrics(forecast_results: dict) -> None:
 
         st.metric(
             label="Avg Daily Change",
-            value=f"৳{abs(avg_daily_change):,.0f}",
+            value=format_price_bdt(abs(avg_daily_change), decimals=0),
             delta=f"{'Up' if avg_daily_change > 0 else 'Down'}",
             help="Average predicted daily price change",
         )
@@ -376,11 +377,11 @@ def display_forecast_table(forecast_results: dict) -> None:
     ].copy()
     display_df.columns = [
         "Date",
-        "Predicted Price (৳)",
-        "Daily Change (৳)",
+        "Predicted Price (BDT)",
+        "Daily Change (BDT)",
         "Change %",
-        "Lower Bound (৳)",
-        "Upper Bound (৳)",
+        "Lower Bound (BDT)",
+        "Upper Bound (BDT)",
         "Confidence %",
     ]
 
@@ -580,11 +581,13 @@ def main():
                         trend_df, settings["metal"], settings["purity"]
                     )
                     st.plotly_chart(chart, config={"responsive": True})
+                    st.toast("Price trend loaded successfully!", icon="✅")
                 else:
                     st.warning("No trend data available")
 
             except Exception as e:
                 st.error(f"Error loading current data: {str(e)}")
+                st.toast("Failed to load price data", icon="❌")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -617,7 +620,9 @@ def main():
 
                     if "error" in forecast_results:
                         st.error(f"Forecast error: {forecast_results['error']}")
+                        st.toast("Failed to generate forecast", icon="❌")
                     else:
+                        st.toast("Forecast generated successfully!", icon="✅")
                         # Display forecast metrics
                         display_forecast_metrics(forecast_results)
 
@@ -645,8 +650,14 @@ def main():
 
                         with col1:
                             # CSV Download
-                            if "forecast" in forecast_results:
-                                csv = forecast_results["forecast"].to_csv(index=False)
+                            if (
+                                "forecasts" in forecast_results
+                                and forecast_results["forecasts"]
+                            ):
+                                forecast_csv_df = pd.DataFrame(
+                                    forecast_results["forecasts"]
+                                )
+                                csv = forecast_csv_df.to_csv(index=False)
                                 st.download_button(
                                     label="📥 Download Forecast (CSV)",
                                     data=csv,
@@ -675,10 +686,13 @@ def main():
                                         )
 
                                         # Generate PDF
+                                        forecast_data = pd.DataFrame(
+                                            forecast_results["forecasts"]
+                                        )
                                         success = generate_simple_report(
                                             current_price=current_price,
                                             purity=settings["purity"],
-                                            forecast_df=forecast_results["forecast"],
+                                            forecast_df=forecast_data,
                                             output_path=temp_path,
                                         )
 
@@ -783,11 +797,14 @@ def main():
                             with col3:
                                 st.metric(
                                     "Price Range",
-                                    f"৳{filtered_df['price_bdt_per_gram'].min():,.0f} - ৳{filtered_df['price_bdt_per_gram'].max():,.0f}",
+                                    f"{format_price_bdt(filtered_df['price_bdt_per_gram'].min(), decimals=0)} - {format_price_bdt(filtered_df['price_bdt_per_gram'].max(), decimals=0)}",
                                 )
                             with col4:
                                 avg_price = filtered_df["price_bdt_per_gram"].mean()
-                                st.metric("Average Price", f"৳{avg_price:,.0f}")
+                                st.metric(
+                                    "Average Price",
+                                    format_price_bdt(avg_price, decimals=0),
+                                )
 
                             # Historical chart
                             analyzer = AdvancedGoldPriceAnalyzer()
@@ -860,6 +877,7 @@ def main():
                                     title=f"Historical Gold Prices - {settings['purity']} ({settings['days']} days)",
                                     xaxis_title="Date",
                                     yaxis_title="Price (BDT/gram)",
+                                    yaxis=dict(tickformat=",.0f", ticksuffix=" BDT"),
                                     height=500,
                                 )
 
@@ -1003,7 +1021,7 @@ def main():
 
                                 with col3:
                                     mae = metrics.get("mae", 0)
-                                    st.metric("MAE", f"৳{mae:.0f}")
+                                    st.metric("MAE", format_price_bdt(mae, decimals=0))
 
                                 with col4:
                                     r2 = metrics.get("r2_score", 0)
@@ -1040,7 +1058,8 @@ def main():
                                                 ),
                                             )
                                             .properties(
-                                                title=f"{model_name.title()} Feature Importance"
+                                                title=f"{model_name.title()} Feature Importance",
+                                                height=400,
                                             )
                                         )
                                         st.altair_chart(chart, use_container_width=True)
@@ -1059,7 +1078,9 @@ def main():
                                             "Model": model_name.title(),
                                             "Accuracy (%)": f"{metrics.get('accuracy_percentage', 0):.1f}",
                                             "MAPE (%)": f"{metrics.get('mape', 0):.2f}",
-                                            "MAE (৳)": f"{metrics.get('mae', 0):.0f}",
+                                            "MAE (BDT)": format_price_bdt(
+                                                metrics.get("mae", 0), decimals=0
+                                            ),
                                             "R² Score": f"{metrics.get('r2_score', 0):.3f}",
                                             "Test Samples": metrics.get(
                                                 "test_samples", 0
@@ -1203,26 +1224,35 @@ def main():
                         col1, col2, col3, col4 = st.columns(4)
 
                         with col1:
-                            st.metric("Starting Price", f"৳{base_price:,.0f}")
+                            st.metric(
+                                "Starting Price",
+                                format_price_bdt(base_price, decimals=0),
+                            )
 
                         with col2:
                             st.metric(
                                 "Predicted Average",
-                                f"৳{prediction_df['predicted_price'].mean():,.0f}",
+                                format_price_bdt(
+                                    prediction_df["predicted_price"].mean(), decimals=0
+                                ),
                                 delta=f"{((prediction_df['predicted_price'].mean() - base_price) / base_price * 100):.1f}%",
                             )
 
                         with col3:
                             st.metric(
                                 "Highest Prediction",
-                                f"৳{prediction_df['predicted_price'].max():,.0f}",
+                                format_price_bdt(
+                                    prediction_df["predicted_price"].max(), decimals=0
+                                ),
                                 delta=f"{((prediction_df['predicted_price'].max() - base_price) / base_price * 100):.1f}%",
                             )
 
                         with col4:
                             st.metric(
                                 "Lowest Prediction",
-                                f"৳{prediction_df['predicted_price'].min():,.0f}",
+                                format_price_bdt(
+                                    prediction_df["predicted_price"].min(), decimals=0
+                                ),
                                 delta=f"{((prediction_df['predicted_price'].min() - base_price) / base_price * 100):.1f}%",
                             )
 
@@ -1287,6 +1317,7 @@ def main():
                             title=f"Custom Price Prediction - {prediction_days} Days",
                             xaxis_title="Date",
                             yaxis_title="Predicted Price (BDT/gram)",
+                            yaxis=dict(tickformat=",.0f", ticksuffix=" BDT"),
                             height=500,
                             hovermode="x unified",
                         )
@@ -1413,7 +1444,7 @@ def main():
                 )
 
                 total_amount = quantity * price_per_gram
-                st.metric("Total Amount", f"৳{total_amount:,.2f}")
+                st.metric("Total Amount", format_price_bdt(total_amount, decimals=2))
 
             notes = st.text_area(
                 "Notes (Optional)",
@@ -1470,11 +1501,14 @@ def main():
 
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Total Portfolio Value", f"৳{total_value:,.2f}")
+                        st.metric(
+                            "Total Portfolio Value",
+                            format_price_bdt(total_value, decimals=2),
+                        )
                     with col2:
                         st.metric(
                             "Total P/L",
-                            f"৳{total_pl:,.2f}",
+                            format_price_bdt(total_pl, decimals=2),
                             delta=f"{(total_pl/total_value*100) if total_value > 0 else 0:.2f}%",
                         )
                     with col3:
@@ -1609,7 +1643,7 @@ def main():
                                 st.progress(min(progress / 100, 1.0))
                             with col2:
                                 st.write(
-                                    f"৳{goal['current_amount']:,.0f} / ৳{goal['target_amount']:,.0f}"
+                                    f"{format_price_bdt(goal['current_amount'], decimals=0)} / {format_price_bdt(goal['target_amount'], decimals=0)}"
                                 )
                             with col3:
                                 st.write(f"Target: {goal['target_date']}")
@@ -1768,7 +1802,7 @@ def main():
             # Show making charge rate
             making_rate = calculator.get_making_charge_rate(item_type, purity_jp)
             st.info(
-                f"💎 Making Charge for {item_type.title()} ({purity_jp}): ৳{making_rate}/gram"
+                f"💎 Making Charge for {item_type.title()} ({purity_jp}): {format_price_bdt(making_rate)}/gram"
             )
 
             use_custom = st.checkbox("Use Custom Making Charge")
@@ -1795,13 +1829,21 @@ def main():
                     )
 
                     # Display in metrics
-                    st.metric("Base Gold Price", f"৳{price.base_price:,.2f}")
-                    st.metric("VAT (5%)", f"৳{price.vat_amount:,.2f}")
-                    st.metric("Making Charges", f"৳{price.making_charges:,.2f}")
+                    st.metric(
+                        "Base Gold Price",
+                        format_price_bdt(price.base_price, decimals=2),
+                    )
+                    st.metric(
+                        "VAT (5%)", format_price_bdt(price.vat_amount, decimals=2)
+                    )
+                    st.metric(
+                        "Making Charges",
+                        format_price_bdt(price.making_charges, decimals=2),
+                    )
                     st.markdown("---")
                     st.metric(
                         "**Total Price**",
-                        f"৳{price.total_price:,.2f}",
+                        format_price_bdt(price.total_price, decimals=2),
                         help="Final price including all charges",
                     )
 
@@ -1830,11 +1872,19 @@ def main():
                     comp_data.append(
                         {
                             "Jewelry Type": item.title(),
-                            "Making Charge/g": f"৳{price.making_charges/weight:,.0f}",
-                            "Base Price": f"৳{price.base_price:,.2f}",
-                            "VAT": f"৳{price.vat_amount:,.2f}",
-                            "Making Charges": f"৳{price.making_charges:,.2f}",
-                            "Total Price": f"৳{price.total_price:,.2f}",
+                            "Making Charge/g": format_price_bdt(
+                                price.making_charges / weight, decimals=0
+                            ),
+                            "Base Price": format_price_bdt(
+                                price.base_price, decimals=2
+                            ),
+                            "VAT": format_price_bdt(price.vat_amount, decimals=2),
+                            "Making Charges": format_price_bdt(
+                                price.making_charges, decimals=2
+                            ),
+                            "Total Price": format_price_bdt(
+                                price.total_price, decimals=2
+                            ),
                         }
                     )
 
@@ -1870,6 +1920,7 @@ def main():
                     title=f"Price Comparison for {weight}g {purity_jp} Jewelry",
                     xaxis_title="Jewelry Type",
                     yaxis_title="Price (BDT)",
+                    yaxis=dict(tickformat=",.0f", ticksuffix=" BDT"),
                     height=500,
                 )
 
@@ -2035,6 +2086,7 @@ def main():
                                     title=f"Backtest Results: {model_type_bt.title()} Model",
                                     xaxis_title="Date",
                                     yaxis_title="Price (BDT/gram)",
+                                    yaxis=dict(tickformat=",.0f", ticksuffix=" BDT"),
                                     height=500,
                                     hovermode="x unified",
                                 )

@@ -100,7 +100,7 @@ class DatabaseSchema:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS historical_prices (
-                id INTEGER PRIMARY KEY,
+                id INTEGER,
                 date DATE NOT NULL,
                 metal TEXT NOT NULL DEFAULT 'gold',
                 purity TEXT NOT NULL DEFAULT '22K',

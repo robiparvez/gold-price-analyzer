@@ -18,7 +18,7 @@ attrs==25.4.0 \
 beautifulsoup4==4.14.2 \
     --hash=sha256:2a98ab9f944a11acee9cc848508ec28d9228abfd522ef0fad6a02a72e0ded69e \
     --hash=sha256:5ef6fa3a8cbece8488d66985560f97ed091e22bbc4e9c2338508a9d5de6d4515
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 black==25.9.0 \
     --hash=sha256:0172a012f725b792c358d57fe7b6b6e8e67375dd157f64fa7a3097b3ed3e2175 \
     --hash=sha256:0474bca9a0dd1b51791fcc507a4e02078a1c63f6d4e4ae5544b9848c7adfb619 \
@@ -375,7 +375,7 @@ httpcore==1.0.9 \
 httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 idna==3.11 \
     --hash=sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea \
     --hash=sha256:795dafcc9c04ed0c1fb032c2aa73654d8e8c5023a7df64a53f39190ada629902
@@ -652,7 +652,7 @@ matplotlib==3.10.7 \
     --hash=sha256:f79d5de970fc90cd5591f60053aecfce1fcd736e0303d9f0bf86be649fa68fb8 \
     --hash=sha256:fba2974df0bf8ce3c995fa84b79cde38326e0f7b5409e7a3a481c1141340bcf7
     # via
-    #   ml-gold-price-analyzer
+    #   gold-price-analyzer
     #   prophet
 mypy==1.18.2 \
     --hash=sha256:01199871b6110a2ce984bde85acd481232d17413868c9807e95c1b0739a58914 \
@@ -759,7 +759,7 @@ numpy==2.2.6 ; python_full_version < '3.11' \
     #   cmdstanpy
     #   contourpy
     #   matplotlib
-    #   ml-gold-price-analyzer
+    #   gold-price-analyzer
     #   pandas
     #   prophet
     #   pydeck
@@ -846,7 +846,7 @@ numpy==2.3.3 ; python_full_version >= '3.11' \
     #   cmdstanpy
     #   contourpy
     #   matplotlib
-    #   ml-gold-price-analyzer
+    #   gold-price-analyzer
     #   pandas
     #   prophet
     #   pydeck
@@ -915,7 +915,7 @@ pandas==2.3.3 \
     --hash=sha256:f8bfc0e12dc78f777f323f55c58649591b2cd0c43534e8355c51d3fede5f4dee
     # via
     #   cmdstanpy
-    #   ml-gold-price-analyzer
+    #   gold-price-analyzer
     #   prophet
     #   streamlit
 pathspec==0.12.1 \
@@ -1030,7 +1030,7 @@ platformdirs==4.5.0 \
 plotly==6.3.1 \
     --hash=sha256:8b4420d1dcf2b040f5983eed433f95732ed24930e496d36eb70d211923532e64 \
     --hash=sha256:dd896e3d940e653a7ce0470087e82c2bd903969a55e30d1b01bb389319461bb0
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 pluggy==1.6.0 \
     --hash=sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3 \
     --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
@@ -1042,7 +1042,7 @@ prophet==1.1.7 \
     --hash=sha256:97ef633a7d2d3bb7237f58b6990a68467c3c8089f605ea364b03f842ab3ea9cf \
     --hash=sha256:e1b1ae5f4d7ab4676f26290a967e9d918aba54a1b885e80ba6d4ed1c0bf421ae \
     --hash=sha256:f713d8efa1c08b70b1b6d2146ecb4e315c879d685f4cbd7f5941f7f57296e13d
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 protobuf==6.32.1 \
     --hash=sha256:2601b779fc7d32a866c6b4404f9d42a3f67c5b9f3f15b4db3cccabe06b95c346 \
     --hash=sha256:2f5b80a49e1eb7b86d85fcd23fe92df154b9730a725c3b38c4e43b9d77018bf4 \
@@ -1130,7 +1130,7 @@ requests==2.32.5 \
     --hash=sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6 \
     --hash=sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf
     # via
-    #   ml-gold-price-analyzer
+    #   gold-price-analyzer
     #   streamlit
 rpds-py==0.27.1 \
     --hash=sha256:08f1e20bccf73b08d12d804d6e1c22ca5530e71659e6673bce31a6bb71c1e73f \
@@ -1296,7 +1296,7 @@ scikit-learn==1.7.2 \
     --hash=sha256:e5bf3d930aee75a65478df91ac1225ff89cd28e9ac7bd1196853a9229b6adb0b \
     --hash=sha256:f95dc55b7902b91331fa4e5845dd5bde0580c9cd9612b1b2791b7e80c3d32615 \
     --hash=sha256:fa8f63940e29c82d1e67a45d5297bdebbcb585f5a5a50c4914cc2e852ab77f33
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 scipy==1.15.3 ; python_full_version < '3.11' \
     --hash=sha256:05dc6abcd105e1a29f95eada46d4a3f251743cfd7d3ae8ddb4088047f24ea477 \
     --hash=sha256:06efcba926324df1696931a57a176c80848ccd67ce6ad020c810736bfd58eb1c \
@@ -1431,7 +1431,7 @@ stanio==0.5.1 \
 streamlit==1.50.0 \
     --hash=sha256:87221d568aac585274a05ef18a378b03df332b93e08103fffcf3cd84d852af46 \
     --hash=sha256:9403b8f94c0a89f80cf679c2fcc803d9a6951e0fba542e7611995de3f67b4bb3
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 tenacity==9.1.2 \
     --hash=sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb \
     --hash=sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138
@@ -1535,7 +1535,7 @@ urllib3==2.5.0 \
 uvicorn==0.37.0 \
     --hash=sha256:4115c8add6d3fd536c8ee77f0e14a7fd2ebba939fed9b02583a97f80648f9e13 \
     --hash=sha256:913b2b88672343739927ce381ff9e2ad62541f9f8289664fa1d1d3803fa2ce6c
-    # via ml-gold-price-analyzer
+    # via gold-price-analyzer
 watchdog==6.0.0 ; sys_platform != 'darwin' \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \
     --hash=sha256:20ffe5b202af80ab4266dcd3e91aae72bf2da48c0d33bdb15c66658e685e94e2 \

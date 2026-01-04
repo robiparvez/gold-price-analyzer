@@ -1,5 +1,5 @@
 [project]
-name = "ml-gold-price-analyzer"
+name = "gold-price-analyzer"
 version = "0.1.0"
 description = "Professional gold price analyzer with ML forecasting, investment tracking, jewelry pricing calculator, and comprehensive backtesting capabilities"
 readme = "README.md"
