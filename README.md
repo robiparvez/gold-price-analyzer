@@ -25,7 +25,7 @@ Professional Streamlit application for gold price forecasting, investment tracki
 1) **Scraping**: `scraper.py` pulls BAJUS live prices → saves CSV + DuckDB.
 2) **Historical sync**: `historical_scraper.py` pulls/patches history (Sakib.dev) → DuckDB + CSV backup.
 3) **External feeds**: `external_data_fetcher.py` ingests FX + spot gold.
-4) **Analysis/ML**: `enhanced_analyzer.py` trains Prophet/RF/XGBoost, ensembles, evaluates.
+4) **Analysis/ML**: `analyzer.py` trains Prophet/RF/XGBoost, ensembles, evaluates.
 5) **UI**: `app.py` renders comprehensive analytics with 8 tabs including investment tracking, jewelry pricing, and backtesting.
 
 ## 🚀 Quick Start
@@ -65,7 +65,7 @@ uv run pytest
 ```text
 ml-gold-price-analyzer/
 ├── app.py                    # Primary Streamlit application with 8-tab interface
-├── enhanced_analyzer.py      # Advanced ML + ensemble logic
+├── analyzer.py      # Advanced ML + ensemble logic
 ├── scraper.py                # BAJUS live scraper → DuckDB/CSV
 ├── historical_scraper.py     # Hybrid sync + gap fill → DuckDB/CSV
 ├── external_data_fetcher.py  # FX + global spot gold
@@ -106,7 +106,7 @@ uv run pytest
 
 ## 🔄 Migration Notes
 
-- Modern architecture using `enhanced_analyzer.py` for ML models and DuckDB for efficient data storage.
+- Modern architecture using `analyzer.py` for ML models and DuckDB for efficient data storage.
 - Existing SQLite data should be exported to CSV then imported into `data/gold_prices.db` if needed.
 
 ## 📜 License

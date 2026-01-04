@@ -11,9 +11,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from analyzer import AdvancedGoldPriceAnalyzer
 from backtesting import GoldPriceBacktester
 from database_schema import DatabaseSchema
-from enhanced_analyzer import AdvancedGoldPriceAnalyzer
 from historical_scraper import HistoricalGoldPriceScraper
 from jewelry_pricing import JewelryPricingCalculator, format_price_breakdown
 from logging_config import setup_logging
@@ -785,14 +785,14 @@ def main():
                                 avg_price = filtered_df["price_bdt_per_gram"].mean()
                                 st.metric("Average Price", f"৳{avg_price:,.0f}")
 
-                            # Enhanced historical chart
+                            # Historical chart
                             analyzer = AdvancedGoldPriceAnalyzer()
                             processed_df = analyzer.preprocess_historical_data(
                                 filtered_df
                             )
 
                             if not processed_df.empty:
-                                # Create enhanced historical chart
+                                # Create historical chart
                                 fig = go.Figure()
 
                                 if chart_type == "Candlestick Chart":
