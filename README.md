@@ -65,7 +65,7 @@ uv run pytest
 ```text
 ml-gold-price-analyzer/
 ├── app.py                    # Primary Streamlit application with 8-tab interface
-├── analyzer.py      # Advanced ML + ensemble logic
+├── analyzer.py               # Advanced ML + ensemble logic
 ├── scraper.py                # BAJUS live scraper → DuckDB/CSV
 ├── historical_scraper.py     # Hybrid sync + gap fill → DuckDB/CSV
 ├── external_data_fetcher.py  # FX + global spot gold

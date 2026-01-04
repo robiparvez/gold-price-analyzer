@@ -387,24 +387,3 @@ class GoldPriceScraper:
                 latest_prices[purity] = price
 
         return latest_prices
-
-
-def main():
-    """Example usage of the GoldPriceScraper."""
-    scraper = GoldPriceScraper()
-
-    # Scrape current prices
-    price_data, saved_files = scraper.scrape_and_save()
-
-    print(f"Scraped {sum(len(prices) for prices in price_data.values())} price entries")
-    print(f"Saved to: {', '.join(saved_files)}")
-
-    # Get simplified latest prices
-    latest = scraper.get_latest_prices()
-    print("\nLatest Gold Prices:")
-    for purity, price in latest.items():
-        print(f"  {purity}: ৳{price:,.0f}/gram")
-
-
-if __name__ == "__main__":
-    main()

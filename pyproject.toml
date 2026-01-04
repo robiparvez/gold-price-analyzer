@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Investment",
 ]
 dependencies = [
-    "streamlit>=1.28.0",
+    "streamlit==1.50.0",
     "requests>=2.31.0",
     "beautifulsoup4>=4.12.0",
     "pandas>=2.1.0",
@@ -55,9 +55,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
-
-[tool.uv]
-dev-dependencies = ["pytest", "black", "isort", "mypy"]
 
 [tool.black]
 line-length = 88

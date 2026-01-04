@@ -217,21 +217,3 @@ Making Charges: ৳{price.making_charges:,.2f}
 ------------------------
 Total Price: ৳{price.total_price:,.2f}
 """.strip()
-
-
-if __name__ == "__main__":
-    # Example usage
-    calculator = JewelryPricingCalculator()
-
-    # Calculate price for a 22k gold ring weighing 5 grams
-    base_price = 8500  # BDT per gram
-    weight = 5  # grams
-
-    price = calculator.calculate_jewelry_price(
-        base_price_per_gram=base_price,
-        weight_grams=weight,
-        purity="22k",
-        item_type="ring",
-    )
-
-    print(format_price_breakdown(price))

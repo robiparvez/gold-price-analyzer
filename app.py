@@ -7,6 +7,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
+import altair as alt
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -565,15 +566,18 @@ def main():
                 st.markdown("### 💰 Current Price Metrics")
                 display_metric_cards(stats)
 
+                # Load data for trend (more days for better visualization)
+                trend_df = load_historical_data(days=365)
+
                 # Price chart
                 st.markdown("### 📊 Recent Price Trend (30 days)")
                 trends_df = analyzer.calculate_trends(
-                    df, settings["metal"], settings["purity"]
+                    trend_df, settings["metal"], settings["purity"]
                 )
 
                 if not trends_df.empty:
                     chart = analyzer.create_price_chart(
-                        df, settings["metal"], settings["purity"]
+                        trend_df, settings["metal"], settings["purity"]
                     )
                     st.plotly_chart(chart, config={"responsive": True})
                 else:
@@ -1022,11 +1026,24 @@ def main():
                                             ]
                                         ).sort_values("Importance", ascending=False)
 
-                                        st.bar_chart(
-                                            importance_df.set_index("Feature")[
-                                                "Importance"
-                                            ]
+                                        chart = (
+                                            alt.Chart(importance_df)
+                                            .mark_bar()
+                                            .encode(
+                                                x=alt.X(
+                                                    "Importance:Q", title="Importance"
+                                                ),
+                                                y=alt.Y(
+                                                    "Feature:N",
+                                                    sort="-x",
+                                                    title="Feature",
+                                                ),
+                                            )
+                                            .properties(
+                                                title=f"{model_name.title()} Feature Importance"
+                                            )
                                         )
+                                        st.altair_chart(chart, use_container_width=True)
 
                         # Model comparison
                         if len(evaluation_results["models"]) > 1:

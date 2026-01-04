@@ -305,38 +305,3 @@ def generate_simple_report(
     except Exception as e:
         logger.error(f"Error generating simple report: {e}")
         return False
-
-
-if __name__ == "__main__":
-    # Example usage
-    logging.basicConfig(level=logging.INFO)
-
-    # Sample data
-    current_prices = {"22k": 8500.50, "21k": 8100.25, "18k": 6950.75}
-
-    forecast_data = pd.DataFrame(
-        {
-            "date": pd.date_range(start=datetime.now(), periods=7, freq="D"),
-            "predicted_price": [8520, 8530, 8545, 8560, 8555, 8570, 8580],
-        }
-    )
-
-    analysis_metrics = {
-        "volatility": 2.5,
-        "trend": "Upward",
-        "monthly_change": 1.8,
-    }
-
-    generator = GoldPriceReportGenerator()
-    success = generator.generate_monthly_report(
-        current_prices=current_prices,
-        forecast_data=forecast_data,
-        historical_data=pd.DataFrame(),
-        analysis_metrics=analysis_metrics,
-        output_path="gold_report_sample.pdf",
-    )
-
-    if success:
-        print("✅ Report generated successfully!")
-    else:
-        print("❌ Failed to generate report")

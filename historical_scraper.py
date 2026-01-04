@@ -3,7 +3,6 @@ Historical Gold Price Scraper for Bangladesh Sources
 Extends the existing scraper with historical data fetching capabilities
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -543,33 +542,3 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
             logger.error(f"Error saving to DuckDB: {e}")
 
         return str(csv_path)
-
-
-async def main():
-    """Example usage of the HistoricalGoldPriceScraper."""
-    scraper = HistoricalGoldPriceScraper()
-
-    # Fetch historical data
-    historical_df = await scraper.fetch_all_historical_data(days=90)
-
-    if not historical_df.empty:
-        # Save historical data
-        saved_path = scraper.save_historical_data(historical_df)
-        print(f"Historical data saved to: {saved_path}")
-
-        # Display summary
-        print("\\nHistorical Data Summary:")
-        print(f"Records: {len(historical_df)}")
-        print(
-            f"Date range: {historical_df['date'].min()} to {historical_df['date'].max()}"
-        )
-        print(
-            f"Price range: ৳{historical_df['price_bdt_per_gram'].min():,.0f} - ৳{historical_df['price_bdt_per_gram'].max():,.0f}"
-        )
-        print(f"Sources: {', '.join(historical_df['source'].unique())}")
-    else:
-        print("No historical data could be fetched")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

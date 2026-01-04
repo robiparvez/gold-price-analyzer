@@ -160,6 +160,6 @@ models/
 # Temporary files
 tmp/
 temp/
-.github\copilot-instructions.md
+.github/copilot-instructions.md
 docs
 

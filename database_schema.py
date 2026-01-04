@@ -422,18 +422,3 @@ class DatabaseSchema:
         except Exception as e:
             logger.error(f"Error calculating P/L: {e}")
             return {}
-
-
-def main():
-    """Example usage of DatabaseSchema."""
-    schema = DatabaseSchema()
-
-    # Create all tables
-    if schema.create_all_tables():
-        print("✓ Database tables created successfully")
-    else:
-        print("✗ Failed to create database tables")
-
-
-if __name__ == "__main__":
-    main()
