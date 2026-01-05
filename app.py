@@ -20,6 +20,7 @@ from jewelry_pricing import JewelryPricingCalculator, format_price_breakdown
 from logging_config import setup_logging
 from pdf_report_generator import generate_simple_report
 from scraper import GoldPriceScraper
+from services.gold_price_service import GoldPriceService
 from utils import format_price_bdt
 
 # Setup logging
@@ -153,12 +154,107 @@ def fetch_and_save_historical_data(days: int = 365) -> pd.DataFrame:
 
 @st.cache_data(ttl=7200)  # Cache for 2 hours
 def generate_forecast(purity: str, model_type: str) -> dict:
-    """Generate 7-day forecast with caching."""
+    """Generate 7-day forecast with caching (legacy)."""
     try:
         analyzer = AdvancedGoldPriceAnalyzer()
         return analyzer.generate_7_day_forecast(purity=purity, model_type=model_type)
     except Exception as e:
         logger.error(f"Error generating forecast: {e}")
+        return {"error": str(e)}
+
+
+@st.cache_resource
+def get_forecasting_service():
+    """Get or create the forecasting service singleton."""
+    return GoldPriceService(cache_enabled=True)
+
+
+def generate_advanced_forecast(
+    historical_df: pd.DataFrame,
+    purity: str,
+    forecast_days: int = 7,
+    use_optimization: bool = True,
+    selected_models: list = None,
+) -> dict:
+    """Generate forecast using the new 9-model system.
+
+    Args:
+        historical_df: Historical price data
+        purity: Gold purity (18K, 21K, 22K, 24K)
+        forecast_days: Number of days to forecast
+        use_optimization: Whether to use Optuna optimization
+        selected_models: List of model names to use (None = all models)
+
+    Returns:
+        Dictionary with forecast results and metadata
+    """
+    try:
+        # Filter data for selected purity
+        df_filtered = historical_df[historical_df["purity"] == purity].copy()
+
+        if len(df_filtered) < 60:
+            return {"error": "Insufficient historical data (need at least 60 days)"}
+
+        # Prepare data
+        df_filtered = df_filtered.sort_values("date")
+        df_filtered.set_index("date", inplace=True)
+
+        X = df_filtered[["price_bdt_per_gram"]].copy()
+        y = df_filtered["price_bdt_per_gram"].copy()
+
+        # Split for training/validation
+        split_idx = int(len(X) * 0.85)
+        X_train, y_train = X[:split_idx], y[:split_idx]
+        X_val, y_val = X[split_idx:], y[split_idx:]
+
+        # Get service
+        service = get_forecasting_service()
+
+        # Train models
+        train_results = service.train(X_train, y_train)
+
+        # Optimize if requested
+        if use_optimization:
+            _ = service.optimize(X_train, y_train, X_val, y_val, n_trials=30)
+
+        # Generate forecast
+        forecast = service.forecast(
+            steps=forecast_days, use_optimized=use_optimization, use_cache=True
+        )
+
+        # Get model comparison
+        comparison = service.get_model_comparison()
+
+        # Format results
+        results = {
+            "forecasts": [
+                {
+                    "date": date,
+                    "predicted_price": pred,
+                    "lower_bound": lower,
+                    "upper_bound": upper,
+                }
+                for date, pred, lower, upper in zip(
+                    forecast.dates,
+                    forecast.predictions,
+                    forecast.lower_bound,
+                    forecast.upper_bound,
+                )
+            ],
+            "model_type": "advanced_ensemble",
+            "model_name": forecast.model_name,
+            "purity": purity,
+            "forecast_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "metadata": forecast.metadata,
+            "comparison": comparison.to_dict("records") if not comparison.empty else [],
+            "train_results": train_results,
+            "service_metrics": service.get_metrics(),
+        }
+
+        return results
+
+    except Exception as e:
+        logger.error(f"Error in advanced forecast: {e}")
         return {"error": str(e)}
 
 
@@ -483,8 +579,7 @@ def main():
     st.markdown(
         "<p style='text-align: center; font-size: 1.2rem; color: #666; margin-bottom: 2rem;'>"
         # "Advanced gold price analysis with historical data and 7-day ML forecasting"
-        "Advanced gp analysis with historical data and 7-day ML forecasting"
-        "</p>",
+        "Advanced gp analysis with historical data and 7-day ML forecasting" "</p>",
         unsafe_allow_html=True,
     )
 
@@ -598,155 +693,305 @@ def main():
         if not settings["enable_forecast"]:
             st.info("🔮 Enable forecasting in the sidebar to view 7-day predictions")
         else:
-            # 7-day forecast
-            with st.spinner("Generating 7-day forecast..."):
-                try:
-                    # Ensure we have historical data
-                    historical_df = load_historical_data(settings["days"])
+            st.markdown("### 🔮 Advanced 9-Model Forecasting System")
 
-                    if historical_df.empty:
-                        st.warning(
-                            "No historical data available. Fetching from external sources..."
+            # Forecast configuration
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                forecast_days = st.slider(
+                    "Forecast Horizon (days)",
+                    min_value=1,
+                    max_value=30,
+                    value=7,
+                    help="Number of days to forecast ahead",
+                )
+
+            with col2:
+                use_optimization = st.checkbox(
+                    "Use Optuna Optimization",
+                    value=True,
+                    help="Optimize ensemble weights using Bayesian optimization (30 trials)",
+                )
+
+            with col3:
+                use_legacy = st.checkbox(
+                    "Use Legacy System",
+                    value=False,
+                    help="Fall back to Prophet + Random Forest (2 models)",
+                )
+
+            # Model information expander
+            with st.expander("ℹ️ About the 9-Model System"):
+                st.markdown(
+                    """
+                **Classical Models (2):**
+                - 🎯 **ARIMA**: Auto-regressive Integrated Moving Average for time series
+                - 🎯 **ETS**: Exponential Smoothing with trend and seasonality
+
+                **ML Enhanced Models (3):**
+                - 🌲 **LightGBM**: Gradient boosting with fast training
+                - 🐱 **CatBoost**: Gradient boosting optimized for categorical features
+                - 🔮 **SVR**: Support Vector Regression for non-linear patterns
+
+                **Deep Learning Models (3):**
+                - 🧠 **LSTM**: Long Short-Term Memory networks for sequential patterns
+                - 🧠 **GRU**: Gated Recurrent Units for efficient time series modeling
+                - 🧠 **TCN**: Temporal Convolutional Networks for long-range dependencies
+
+                **Hybrid Model (1):**
+                - ⚡ **LSTM-ARIMA**: Combines deep learning with classical statistics
+
+                **Ensemble Methods:**
+                - 📊 **Weighted Mean**: Inversely proportional to prediction variance
+                - 📊 **Equal Weight**: Simple average of all models
+                - 📊 **Median**: Robust to outliers
+                - 🔬 **Optuna-Optimized**: Bayesian hyperparameter optimization
+                """
+                )
+
+            if st.button("🚀 Generate Forecast", type="primary"):
+                with st.spinner("Training 9 models and generating forecast..."):
+                    try:
+                        # Load historical data
+                        historical_df = load_historical_data(settings["days"])
+
+                        if historical_df.empty:
+                            st.warning("Fetching historical data...")
+                            historical_df = fetch_and_save_historical_data(
+                                settings["days"]
+                            )
+
+                        if historical_df.empty:
+                            st.error("Unable to fetch historical data")
+                            st.stop()
+
+                        # Generate forecast
+                        if use_legacy:
+                            # Use old system
+                            forecast_results = generate_forecast(
+                                settings["purity"], settings["model_type"]
+                            )
+                        else:
+                            # Use new 9-model system
+                            forecast_results = generate_advanced_forecast(
+                                historical_df,
+                                settings["purity"],
+                                forecast_days=forecast_days,
+                                use_optimization=use_optimization,
+                            )
+
+                        if "error" in forecast_results:
+                            st.error(f"Forecast error: {forecast_results['error']}")
+                            st.stop()
+
+                        st.success(
+                            f"✅ Forecast generated using {forecast_results.get('model_name', 'ensemble')} model!"
                         )
-                        historical_df = fetch_and_save_historical_data(settings["days"])
 
-                    if historical_df.empty:
-                        st.error("Unable to fetch historical data for forecasting")
+                        # Store in session state for persistence
+                        st.session_state.forecast_results = forecast_results
+                        st.session_state.forecast_generated = True
+
+                    except Exception as e:
+                        st.error(f"Error generating forecast: {str(e)}")
+                        logger.exception("Forecast generation failed")
                         st.stop()
 
-                    # Generate forecast
-                    forecast_results = generate_forecast(
-                        settings["purity"], settings["model_type"]
-                    )
+            # Display results if available
+            if st.session_state.get("forecast_generated", False):
+                forecast_results = st.session_state.forecast_results
 
-                    if "error" in forecast_results:
-                        st.error(f"Forecast error: {forecast_results['error']}")
-                        st.toast("Failed to generate forecast", icon="❌")
-                    else:
-                        st.toast("Forecast generated successfully!", icon="✅")
-                        # Display forecast metrics
-                        display_forecast_metrics(forecast_results)
+                # Display forecast metrics
+                st.markdown("### 📊 Forecast Summary")
+                display_forecast_metrics(forecast_results)
 
-                        # Forecast visualization
-                        st.markdown("### 📈 7-Day Forecast Chart")
-                        analyzer = AdvancedGoldPriceAnalyzer()
+                # Model comparison table (new feature)
+                if "comparison" in forecast_results and forecast_results["comparison"]:
+                    with st.expander("🏆 Model Performance Comparison"):
+                        comparison_df = pd.DataFrame(forecast_results["comparison"])
 
-                        # Filter historical data for context
-                        recent_historical = historical_df[
-                            (historical_df["purity"] == settings["purity"])
-                            & (historical_df["metal"] == settings["metal"])
-                        ].tail(30)
+                        # Format columns
+                        if "mean_pred" in comparison_df.columns:
+                            comparison_df["mean_pred"] = comparison_df[
+                                "mean_pred"
+                            ].apply(lambda x: f"৳{x:,.0f}")
+                        if "std_pred" in comparison_df.columns:
+                            comparison_df["std_pred"] = comparison_df["std_pred"].apply(
+                                lambda x: f"৳{x:,.1f}"
+                            )
 
-                        forecast_chart = analyzer.create_forecast_visualization(
-                            forecast_results, recent_historical
+                        st.dataframe(
+                            comparison_df, use_container_width=True, height=350
                         )
-                        st.plotly_chart(forecast_chart, config={"responsive": True})
 
-                        # Detailed forecast table
-                        st.markdown("### 📋 Detailed 7-Day Forecast")
-                        display_forecast_table(forecast_results)
+                # Training results (new feature)
+                if "train_results" in forecast_results:
+                    with st.expander("🔧 Model Training Results"):
+                        train_results = forecast_results["train_results"]
 
-                        # Export options
-                        col1, col2 = st.columns(2)
+                        success_count = sum(
+                            1
+                            for r in train_results.values()
+                            if r.get("status") == "success"
+                        )
 
+                        st.metric(
+                            "Successfully Trained Models",
+                            f"{success_count} / 9",
+                            help="Number of models that trained without errors",
+                        )
+
+                        cols = st.columns(3)
+                        for idx, (model_name, result) in enumerate(
+                            train_results.items()
+                        ):
+                            with cols[idx % 3]:
+                                if result.get("status") == "success":
+                                    st.success(f"✅ {model_name}")
+                                else:
+                                    st.error(f"❌ {model_name}")
+                                    if "error" in result:
+                                        st.caption(f"Error: {result['error'][:50]}...")
+
+                # Service metrics (new feature)
+                if "service_metrics" in forecast_results:
+                    with st.expander("📈 Service Performance Metrics"):
+                        metrics = forecast_results["service_metrics"]
+
+                        col1, col2, col3, col4 = st.columns(4)
                         with col1:
-                            # CSV Download
-                            if (
-                                "forecasts" in forecast_results
-                                and forecast_results["forecasts"]
-                            ):
-                                forecast_csv_df = pd.DataFrame(
+                            st.metric(
+                                "Forecasts Requested",
+                                metrics.get("forecasts_requested", 0),
+                            )
+                        with col2:
+                            st.metric("Cache Hits", metrics.get("cache_hits", 0))
+                        with col3:
+                            st.metric(
+                                "Cache Hit Rate",
+                                f"{metrics.get('cache_hit_rate', 0):.1f}%",
+                            )
+                        with col4:
+                            st.metric("Errors", metrics.get("errors", 0))
+
+                # Forecast visualization
+                st.markdown("### 📈 Forecast Visualization")
+
+                # Create visualization
+                recent_historical = historical_df[
+                    (historical_df["purity"] == settings["purity"])
+                    & (historical_df["metal"] == settings["metal"])
+                ].tail(60)
+
+                analyzer = AdvancedGoldPriceAnalyzer()
+                forecast_chart = analyzer.create_forecast_visualization(
+                    forecast_results, recent_historical
+                )
+                st.plotly_chart(forecast_chart, use_container_width=True)
+
+                # Detailed forecast table
+                st.markdown("### 📋 Detailed Forecast Table")
+                display_forecast_table(forecast_results)
+
+                # Export options
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    # CSV Download
+                    if forecast_results.get("forecasts"):
+                        forecast_csv_df = pd.DataFrame(forecast_results["forecasts"])
+                        csv = forecast_csv_df.to_csv(index=False)
+                        st.download_button(
+                            label="📥 Download CSV",
+                            data=csv,
+                            file_name=f"forecast_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                            mime="text/csv",
+                        )
+
+                with col2:
+                    # Model comparison CSV
+                    if forecast_results.get("comparison"):
+                        comparison_csv = pd.DataFrame(
+                            forecast_results["comparison"]
+                        ).to_csv(index=False)
+                        st.download_button(
+                            label="📥 Download Comparison",
+                            data=comparison_csv,
+                            file_name=f"model_comparison_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                            mime="text/csv",
+                        )
+
+                with col3:
+                    # PDF Report
+                    if st.button("📄 Generate PDF"):
+                        with st.spinner("Generating PDF report..."):
+                            try:
+                                import tempfile
+
+                                with tempfile.NamedTemporaryFile(
+                                    delete=False, suffix=".pdf"
+                                ) as tmp:
+                                    temp_path = tmp.name
+
+                                current_price = (
+                                    recent_historical["price_bdt_per_gram"].iloc[-1]
+                                    if not recent_historical.empty
+                                    else 8500.0
+                                )
+
+                                forecast_data = pd.DataFrame(
                                     forecast_results["forecasts"]
                                 )
-                                csv = forecast_csv_df.to_csv(index=False)
-                                st.download_button(
-                                    label="📥 Download Forecast (CSV)",
-                                    data=csv,
-                                    file_name=f"gold_forecast_{datetime.now().strftime('%Y%m%d')}.csv",
-                                    mime="text/csv",
+                                success = generate_simple_report(
+                                    current_price=current_price,
+                                    purity=settings["purity"],
+                                    forecast_df=forecast_data,
+                                    output_path=temp_path,
                                 )
 
-                        with col2:
-                            # PDF Download
-                            if st.button("📄 Generate PDF Report"):
-                                with st.spinner("Generating PDF report..."):
-                                    try:
-                                        import tempfile
+                                if success:
+                                    with open(temp_path, "rb") as f:
+                                        pdf_data = f.read()
 
-                                        # Create temporary file
-                                        with tempfile.NamedTemporaryFile(
-                                            delete=False, suffix=".pdf"
-                                        ) as tmp:
-                                            temp_path = tmp.name
+                                    st.download_button(
+                                        label="📥 Download PDF",
+                                        data=pdf_data,
+                                        file_name=f"report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                                        mime="application/pdf",
+                                    )
+                                    st.success("✅ PDF generated!")
+                                else:
+                                    st.error("Failed to generate PDF")
 
-                                        # Get current price
-                                        current_price = (
-                                            df["price_bdt_per_gram"].iloc[-1]
-                                            if not df.empty
-                                            else 8500.0
-                                        )
+                            except Exception as e:
+                                st.error(f"PDF error: {str(e)}")
 
-                                        # Generate PDF
-                                        forecast_data = pd.DataFrame(
-                                            forecast_results["forecasts"]
-                                        )
-                                        success = generate_simple_report(
-                                            current_price=current_price,
-                                            purity=settings["purity"],
-                                            forecast_df=forecast_data,
-                                            output_path=temp_path,
-                                        )
+                # Ensemble metadata
+                if "metadata" in forecast_results:
+                    with st.expander("🔬 Ensemble Details"):
+                        metadata = forecast_results["metadata"]
 
-                                        if success:
-                                            # Read and offer download
-                                            with open(temp_path, "rb") as f:
-                                                pdf_data = f.read()
+                        st.write(
+                            f"**Model Name:** {forecast_results.get('model_name', 'N/A')}"
+                        )
+                        st.write(
+                            f"**Models Used:** {metadata.get('num_models', 'N/A')}"
+                        )
+                        st.write(
+                            f"**Ensemble Method:** {metadata.get('best_method', metadata.get('ensemble_method', 'N/A'))}"
+                        )
 
-                                            st.download_button(
-                                                label="📥 Download PDF Report",
-                                                data=pdf_data,
-                                                file_name=f"gold_report_{datetime.now().strftime('%Y%m%d')}.pdf",
-                                                mime="application/pdf",
-                                            )
-                                            st.success(
-                                                "✅ PDF report generated successfully!"
-                                            )
-                                        else:
-                                            st.error("Failed to generate PDF report.")
+                        if "best_weights" in metadata:
+                            st.write("**Optimized Weights:**")
+                            weights = metadata["best_weights"]
+                            for model, weight in sorted(
+                                weights.items(), key=lambda x: x[1], reverse=True
+                            ):
+                                st.write(f"  - {model}: {weight:.3f}")
 
-                                    except Exception as e:
-                                        st.error(f"Error generating PDF: {str(e)}")
-
-                        # Model information
-                        with st.expander("🔬 Model Information"):
-                            st.write(
-                                f"**Model Type:** {forecast_results.get('model_type', 'Unknown')}"
-                            )
-                            st.write(
-                                f"**Purity:** {forecast_results.get('purity', settings['purity'])}"
-                            )
-                            st.write(
-                                f"**Generated:** {forecast_results.get('forecast_date', 'Unknown')}"
-                            )
-
-                            if "prophet" in forecast_results:
-                                st.write(
-                                    "**Prophet Model:** Includes seasonal patterns and trend analysis"
-                                )
-                            if "random_forest" in forecast_results:
-                                st.write(
-                                    "**Random Forest Model:** Uses technical indicators and price patterns"
-                                )
-                            if forecast_results.get("model_type") == "ensemble":
-                                weights = forecast_results.get("ensemble", {}).get(
-                                    "weights", {}
-                                )
-                                st.write(
-                                    f"**Ensemble Weights:** Prophet: {weights.get('prophet', 0):.1%}, Random Forest: {weights.get('random_forest', 0):.1%}"
-                                )
-
-                except Exception as e:
-                    st.error(f"Error generating forecast: {str(e)}")
+                        if "best_rmse" in metadata:
+                            st.metric("Best RMSE", f"{metadata['best_rmse']:.2f}")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
