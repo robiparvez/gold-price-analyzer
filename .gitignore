@@ -1,3 +1,7 @@
+# ===========================================
+# Python
+# ===========================================
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -7,66 +11,6 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# pyenv
-.python-version
-
-# Virtual environments
-env/
-venv/
-.venv/
-ENV/
-
-# IDEs and editors
-.vscode/
-.idea/
-
-# Logs and databases
-logs/
-*.log
-*.sqlite3
-
-# Data files (CSV/TSV and raw data)
-data/
-*.csv
-*.tsv
-
-# Lockfiles
-*.lock
-pip-wheel-metadata/
-pip-log.txt
-
-# Coverage and test reports
-.coverage
-htmlcov/
-.tox/
-
-# Environment files
-.env
-
-# macOS
-.DS_Store
-# Python-generated files
-__pycache__/
-*.py[oc]
-*.py[cod]
-*$py.class
-*.so
 .Python
 build/
 develop-eggs/
@@ -89,22 +33,13 @@ MANIFEST
 *.manifest
 *.spec
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+# ===========================================
+# Virtual Environments
+# ===========================================
 
 # Virtual environments
 .env
-.venv
+.venv/
 env/
 venv/
 ENV/
@@ -114,29 +49,81 @@ venv.bak/
 # UV
 .uv/
 
-# IDEs
+# pyenv
+.python-version
+
+# ===========================================
+# IDEs and Editors
+# ===========================================
+
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# ===========================================
+# Operating Systems
+# ===========================================
+
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+
+# Windows
 ehthumbs.db
 Thumbs.db
 
-# Application specific
-logs/*.log
-logs/*.log.*
-data/*.csv
-data/*.db
-*.tmp
-*.temp
+# ===========================================
+# Testing and Coverage
+# ===========================================
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ===========================================
+# Logs and Databases
+# ===========================================
+
+logs/
+*.log
+*.sqlite3
+
+# ===========================================
+# Data Files
+# ===========================================
+
+# Raw data files
+data/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+
+# ===========================================
+# Machine Learning
+# ===========================================
+
+*.pkl
+*.joblib
+catboost_info/
+
+# ===========================================
+# Application Specific
+# ===========================================
 
 # Streamlit
 .streamlit/
@@ -145,21 +132,22 @@ data/*.db
 .ipynb_checkpoints/
 *.ipynb
 
-# Machine Learning
-*.pkl
-*.joblib
-
-# Data files
-*.xlsx
-*.xls
+# Lockfiles
+*.lock
+pip-wheel-metadata/
+pip-log.txt
 
 # Temporary files
+*.tmp
+*.temp
 tmp/
 temp/
+
+# ===========================================
+# Project Specific
+# ===========================================
+
 .github/copilot-instructions.md
-docs
-.ruff_cache
+docs/
+.ruff_cache/
 .pre-commit/
-catboost_info/
-catboost_info/catboost_training.json
-catboost_info/learn/events.out.tfevents
