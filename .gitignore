@@ -160,3 +160,6 @@ temp/
 docs
 .ruff_cache
 .pre-commit/
+catboost_info/
+catboost_info/catboost_training.json
+catboost_info/learn/events.out.tfevents
