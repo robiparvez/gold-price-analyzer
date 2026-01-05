@@ -53,7 +53,7 @@ class ModelRegistry:
         """
         if self.manifest_path.exists():
             try:
-                with open(self.manifest_path, "r", encoding="utf-8") as f:
+                with open(self.manifest_path, encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 logger.warning(f"Failed to load manifest: {e}. Creating new one.")
@@ -68,9 +68,7 @@ class ModelRegistry:
         except Exception as e:
             logger.error(f"Failed to save manifest: {e}")
 
-    def get_model_path(
-        self, model_type: str, model_name: str, purity: str
-    ) -> Path:
+    def get_model_path(self, model_type: str, model_name: str, purity: str) -> Path:
         """Get the file path for a model.
 
         Args:
@@ -215,9 +213,7 @@ class ModelRegistry:
                 continue
 
             # Sort by training date (newest first)
-            sorted_models = sorted(
-                models, key=lambda m: m.trained_at, reverse=True
-            )
+            sorted_models = sorted(models, key=lambda m: m.trained_at, reverse=True)
 
             # Delete old models
             for old_model in sorted_models[keep_latest:]:

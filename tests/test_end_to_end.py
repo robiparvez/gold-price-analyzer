@@ -106,7 +106,7 @@ class TestEndToEndWorkflows:
             assert forecast1.predictions == forecast2.predictions
 
             # Different steps - cache miss
-            forecast3 = service.forecast(steps=14, use_cache=True)
+            service.forecast(steps=14, use_cache=True)
             metrics3 = service.get_metrics()
             assert metrics3["cache_misses"] == 2
 
@@ -179,12 +179,12 @@ class TestEndToEndWorkflows:
             # Session 1: Train and forecast
             service1 = GoldPriceService(cache_dir=tmpdir)
             service1.train(X_train, y_train)
-            forecast1 = service1.forecast(steps=7, use_cache=True)
+            service1.forecast(steps=7, use_cache=True)
 
             # Session 2: New service instance, same cache
             service2 = GoldPriceService(cache_dir=tmpdir)
             service2.train(X_train, y_train)  # Re-train (in real scenario, might load)
-            forecast2 = service2.forecast(steps=7, use_cache=True)
+            service2.forecast(steps=7, use_cache=True)
 
             # Should get cache hit
             metrics = service2.get_metrics()

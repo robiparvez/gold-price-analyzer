@@ -23,9 +23,7 @@ def small_dataset() -> pd.DataFrame:
     """Create a small dataset (50 samples)."""
     dates = pd.date_range(start="2025-11-01", periods=50, freq="D")
     prices = 100 + np.cumsum(np.random.randn(50) * 2)
-    df = pd.DataFrame(
-        {"date": dates, "price_bdt_per_gram": prices, "purity": "22K"}
-    )
+    df = pd.DataFrame({"date": dates, "price_bdt_per_gram": prices, "purity": "22K"})
     df.set_index("date", inplace=True)
     return df
 
@@ -35,9 +33,7 @@ def medium_dataset() -> pd.DataFrame:
     """Create a medium dataset (100 samples)."""
     dates = pd.date_range(start="2025-07-01", periods=100, freq="D")
     prices = 100 + np.cumsum(np.random.randn(100) * 2)
-    df = pd.DataFrame(
-        {"date": dates, "price_bdt_per_gram": prices, "purity": "22K"}
-    )
+    df = pd.DataFrame({"date": dates, "price_bdt_per_gram": prices, "purity": "22K"})
     df.set_index("date", inplace=True)
     return df
 
@@ -47,9 +43,7 @@ def large_dataset() -> pd.DataFrame:
     """Create a large dataset (180 samples - 6 months)."""
     dates = pd.date_range(start="2025-07-01", periods=180, freq="D")
     prices = 100 + np.cumsum(np.random.randn(180) * 2)
-    df = pd.DataFrame(
-        {"date": dates, "price_bdt_per_gram": prices, "purity": "22K"}
-    )
+    df = pd.DataFrame({"date": dates, "price_bdt_per_gram": prices, "purity": "22K"})
     df.set_index("date", inplace=True)
     return df
 
@@ -61,9 +55,7 @@ def dataset_with_gaps() -> pd.DataFrame:
     # Remove some dates to create gaps
     dates = dates.drop([dates[10], dates[20], dates[30], dates[40]])
     prices = 100 + np.cumsum(np.random.randn(len(dates)) * 2)
-    df = pd.DataFrame(
-        {"date": dates, "price_bdt_per_gram": prices, "purity": "22K"}
-    )
+    df = pd.DataFrame({"date": dates, "price_bdt_per_gram": prices, "purity": "22K"})
     df.set_index("date", inplace=True)
     return df
 
@@ -276,7 +268,9 @@ class TestFillMissingDates:
         """Test filling gaps with linear interpolation."""
         original_len = len(dataset_with_gaps)
         # Fill weekends=True to actually fill all dates
-        filled = fill_missing_dates(dataset_with_gaps, method="linear", fill_weekends=True)
+        filled = fill_missing_dates(
+            dataset_with_gaps, method="linear", fill_weekends=True
+        )
 
         # Should have more samples after filling (including removed gaps)
         assert len(filled) >= original_len
@@ -334,9 +328,7 @@ class TestGetRecommendedModels:
         assert len(recommendations["warnings"]) > 0
         assert recommendations["train_config"]["use_validation_set"] is False
 
-    def test_medium_dataset_recommendations(
-        self, medium_dataset: pd.DataFrame
-    ) -> None:
+    def test_medium_dataset_recommendations(self, medium_dataset: pd.DataFrame) -> None:
         """Test recommendations for medium dataset."""
         info = analyze_dataset(medium_dataset)
         recommendations = get_recommended_models(info)
@@ -355,9 +347,7 @@ class TestGetRecommendedModels:
         assert recommendations["train_config"]["use_validation_set"] is True
         assert recommendations["train_config"]["enable_hyperparameter_tuning"] is True
 
-    def test_recommendations_with_gaps(
-        self, dataset_with_gaps: pd.DataFrame
-    ) -> None:
+    def test_recommendations_with_gaps(self, dataset_with_gaps: pd.DataFrame) -> None:
         """Test that gap warnings are included."""
         info = analyze_dataset(dataset_with_gaps)
         recommendations = get_recommended_models(info)

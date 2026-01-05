@@ -73,9 +73,7 @@ def sample_data() -> pd.DataFrame:
     dates = pd.date_range(start="2025-01-01", end="2025-06-30", freq="D")
     prices = 100 + np.cumsum(np.random.randn(len(dates)) * 2)
 
-    df = pd.DataFrame(
-        {"date": dates, "price_bdt_per_gram": prices, "purity": "22K"}
-    )
+    df = pd.DataFrame({"date": dates, "price_bdt_per_gram": prices, "purity": "22K"})
     df.set_index("date", inplace=True)
     return df
 

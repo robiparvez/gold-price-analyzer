@@ -148,7 +148,9 @@ class BaseTimeSeriesModel(ABC):
         """
         pass
 
-    def validate_data(self, X: pd.DataFrame, y: pd.Series | None = None, min_samples: int = 60) -> None:
+    def validate_data(
+        self, X: pd.DataFrame, y: pd.Series | None = None, min_samples: int = 60
+    ) -> None:
         """Validate input data meets requirements.
 
         Args:
@@ -173,9 +175,13 @@ class BaseTimeSeriesModel(ABC):
 
         # Check for NaN values
         if y is not None and y.isnull().any():
-            raise ValueError("Target data contains NaN values. Please clean data first.")
-        if hasattr(X, 'isnull') and X.isnull().any().any():
-            raise ValueError("Feature data contains NaN values. Please clean data first.")
+            raise ValueError(
+                "Target data contains NaN values. Please clean data first."
+            )
+        if hasattr(X, "isnull") and X.isnull().any().any():
+            raise ValueError(
+                "Feature data contains NaN values. Please clean data first."
+            )
 
     def _create_metadata(
         self,
@@ -205,18 +211,26 @@ class BaseTimeSeriesModel(ABC):
         )
 
         data_stats = {
-            "mean": float(X["price_bdt_per_gram"].mean())
-            if "price_bdt_per_gram" in X.columns
-            else 0.0,
-            "std": float(X["price_bdt_per_gram"].std())
-            if "price_bdt_per_gram" in X.columns
-            else 0.0,
-            "min": float(X["price_bdt_per_gram"].min())
-            if "price_bdt_per_gram" in X.columns
-            else 0.0,
-            "max": float(X["price_bdt_per_gram"].max())
-            if "price_bdt_per_gram" in X.columns
-            else 0.0,
+            "mean": (
+                float(X["price_bdt_per_gram"].mean())
+                if "price_bdt_per_gram" in X.columns
+                else 0.0
+            ),
+            "std": (
+                float(X["price_bdt_per_gram"].std())
+                if "price_bdt_per_gram" in X.columns
+                else 0.0
+            ),
+            "min": (
+                float(X["price_bdt_per_gram"].min())
+                if "price_bdt_per_gram" in X.columns
+                else 0.0
+            ),
+            "max": (
+                float(X["price_bdt_per_gram"].max())
+                if "price_bdt_per_gram" in X.columns
+                else 0.0
+            ),
         }
 
         return ModelMetadata(

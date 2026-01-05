@@ -7,7 +7,6 @@ limited historical data (6-month horizon).
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
 
 import numpy as np
@@ -156,7 +155,9 @@ def adaptive_train_test_split(
 
 def adaptive_train_val_test_split(
     df: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame] | tuple[pd.DataFrame, pd.DataFrame]:
+) -> (
+    tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame] | tuple[pd.DataFrame, pd.DataFrame]
+):
     """Split data into train/val/test with adaptive strategy.
 
     - If < 100 samples: train/test only (no validation set)
@@ -340,9 +341,7 @@ def fill_missing_dates(
         raise ValueError("DataFrame must have DatetimeIndex")
 
     # Create complete date range
-    full_date_range = pd.date_range(
-        start=df.index.min(), end=df.index.max(), freq="D"
-    )
+    full_date_range = pd.date_range(start=df.index.min(), end=df.index.max(), freq="D")
 
     # Reindex to include all dates
     df_filled = df.reindex(full_date_range)

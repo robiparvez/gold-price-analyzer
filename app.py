@@ -483,7 +483,8 @@ def main():
     st.markdown(
         "<p style='text-align: center; font-size: 1.2rem; color: #666; margin-bottom: 2rem;'>"
         # "Advanced gold price analysis with historical data and 7-day ML forecasting"
-        "Advanced gp analysis with historical data and 7-day ML forecasting" "</p>",
+        "Advanced gp analysis with historical data and 7-day ML forecasting"
+        "</p>",
         unsafe_allow_html=True,
     )
 
@@ -1509,7 +1510,7 @@ def main():
                         st.metric(
                             "Total P/L",
                             format_price_bdt(total_pl, decimals=2),
-                            delta=f"{(total_pl/total_value*100) if total_value > 0 else 0:.2f}%",
+                            delta=f"{(total_pl / total_value * 100) if total_value > 0 else 0:.2f}%",
                         )
                     with col3:
                         st.metric(

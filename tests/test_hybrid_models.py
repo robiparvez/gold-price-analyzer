@@ -21,7 +21,7 @@ def medium_time_series():
 
 class TestHybridLSTMARIMAModel:
     """Test hybrid LSTM-ARIMA model."""
-    
+
     def test_init(self):
         """Test model initialization."""
         model = HybridLSTMARIMAModel()
@@ -29,7 +29,7 @@ class TestHybridLSTMARIMAModel:
         assert model.forecast_horizon == 7
         assert model.lstm_units == 32
         assert model.arima_order == (1, 1, 1)
-    
+
     def test_init_with_custom_params(self):
         """Test initialization with custom parameters."""
         model = HybridLSTMARIMAModel(
@@ -44,7 +44,7 @@ class TestHybridLSTMARIMAModel:
         assert model.arima_order == (2, 1, 1)
         # Weights should be normalized
         assert abs(model.lstm_weight + model.arima_weight - 1.0) < 0.001
-    
+
     def test_weight_normalization(self):
         """Test that weights are properly normalized."""
         model = HybridLSTMARIMAModel(lstm_weight=2.0, arima_weight=3.0)
@@ -52,7 +52,7 @@ class TestHybridLSTMARIMAModel:
         assert abs(model.lstm_weight - 0.4) < 0.001
         assert abs(model.arima_weight - 0.6) < 0.001
         assert abs(model.lstm_weight + model.arima_weight - 1.0) < 0.001
-    
+
     def test_fit(self, medium_time_series):
         """Test model fitting."""
         X, y = medium_time_series
@@ -64,11 +64,11 @@ class TestHybridLSTMARIMAModel:
             validation_split=0.2,
         )
         model.fit(X, y)
-        
+
         assert model.lstm_model._fitted_model is not None
         assert model._lstm_residuals is not None
         assert len(model._lstm_residuals) > 0
-    
+
     def test_predict(self, medium_time_series):
         """Test prediction."""
         X, y = medium_time_series
@@ -78,21 +78,25 @@ class TestHybridLSTMARIMAModel:
             lstm_epochs=2,
         )
         model.fit(X, y)
-        
+
         result = model.predict(steps=7)
-        
+
         assert len(result.predictions) == 7
         assert len(result.lower_bound) == 7
         assert len(result.upper_bound) == 7
-        assert all(lb < pred < ub for lb, pred, ub in
-                  zip(result.lower_bound, result.predictions, result.upper_bound))
-    
+        assert all(
+            lb < pred < ub
+            for lb, pred, ub in zip(
+                result.lower_bound, result.predictions, result.upper_bound
+            )
+        )
+
     def test_get_metadata(self, medium_time_series):
         """Test metadata extraction."""
         X, y = medium_time_series
         model = HybridLSTMARIMAModel(lstm_epochs=2)
         model.fit(X, y)
-        
+
         metadata = model.get_metadata()
         assert metadata.model_name == "Hybrid-LSTM-ARIMA"
         assert metadata.model_type == "hybrid"
@@ -101,11 +105,11 @@ class TestHybridLSTMARIMAModel:
 
 class TestHybridIntegration:
     """Integration tests for hybrid models."""
-    
+
     def test_hybrid_combines_components(self, medium_time_series):
         """Test that hybrid model combines LSTM and ARIMA."""
         X, y = medium_time_series
-        
+
         model = HybridLSTMARIMAModel(
             lstm_lookback=10,
             lstm_weight=0.6,
@@ -114,17 +118,17 @@ class TestHybridIntegration:
         )
         model.fit(X, y)
         result = model.predict(steps=5)
-        
+
         # Predictions should be a mix of LSTM and ARIMA
         assert result is not None
         assert len(result.predictions) == 5
         assert "lstm_weight" in result.metadata
         assert "arima_weight" in result.metadata
-    
+
     def test_hybrid_vs_individual_predictions(self, medium_time_series):
         """Test that hybrid produces different forecast than individual models."""
         X, y = medium_time_series
-        
+
         hybrid = HybridLSTMARIMAModel(
             lstm_lookback=10,
             lstm_weight=0.5,
@@ -133,19 +137,19 @@ class TestHybridIntegration:
         )
         hybrid.fit(X, y)
         hybrid_result = hybrid.predict(steps=5)
-        
+
         # Just LSTM component
         lstm_result = hybrid.lstm_model.predict(steps=5)
-        
+
         # Hybrid should blend both forecasts
         # Not necessarily all equal (since ARIMA adds residuals)
         assert hybrid_result.predictions is not None
         assert lstm_result.predictions is not None
-    
+
     def test_hybrid_with_different_weights(self, medium_time_series):
         """Test hybrid with different ensemble weights."""
         X, y = medium_time_series
-        
+
         # LSTM-heavy
         model_lstm_heavy = HybridLSTMARIMAModel(
             lstm_lookback=10,
@@ -155,7 +159,7 @@ class TestHybridIntegration:
         )
         model_lstm_heavy.fit(X, y)
         result_heavy = model_lstm_heavy.predict(steps=5)
-        
+
         # ARIMA-heavy
         model_arima_heavy = HybridLSTMARIMAModel(
             lstm_lookback=10,
@@ -165,6 +169,6 @@ class TestHybridIntegration:
         )
         model_arima_heavy.fit(X, y)
         result_arima = model_arima_heavy.predict(steps=5)
-        
+
         # Different weights should produce different forecasts
         assert not np.allclose(result_heavy.predictions, result_arima.predictions)
