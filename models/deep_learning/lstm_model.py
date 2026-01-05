@@ -11,6 +11,7 @@ import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from components.business_day_utils import generate_business_day_dates
 from models.time_series_base import BaseTimeSeriesModel, ForecastResult, ModelMetadata
 
 logger = logging.getLogger(__name__)
@@ -272,12 +273,12 @@ class LSTMModel(BaseTimeSeriesModel):
                 next_val_norm = (next_val - self._feature_mean) / self._feature_std
                 last_sequence = np.vstack([last_sequence[1:], [[next_val_norm]]])
 
-            # Create forecast dates
+            # Create forecast dates (business days only)
             last_date = self._training_data.index[-1]
-            forecast_dates = pd.date_range(
-                start=last_date + pd.Timedelta(days=1),
-                periods=steps,
-                freq="D",
+            forecast_dates = generate_business_day_dates(
+                start_date=last_date,
+                num_days=steps,
+                exclude_time=True,
             )
 
             # Confidence intervals
@@ -290,7 +291,7 @@ class LSTMModel(BaseTimeSeriesModel):
             margin = max(1.96 * recent_std, min_margin)
 
             return ForecastResult(
-                dates=[str(d) for d in forecast_dates],
+                dates=forecast_dates,
                 predictions=predictions,
                 lower_bound=[max(0, p - margin) for p in predictions],
                 upper_bound=[p + margin for p in predictions],

@@ -5,7 +5,7 @@ This module provides an ARIMA implementation optimized for limited historical da
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
@@ -13,6 +13,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import acf, adfuller, pacf
 
+from components.business_day_utils import generate_business_day_dates
 from models.time_series_base import BaseTimeSeriesModel, ForecastResult, ModelMetadata
 
 logger = logging.getLogger(__name__)
@@ -303,22 +304,21 @@ class ARIMAModel(BaseTimeSeriesModel):
             forecast_df = self._fitted_model.get_forecast(steps=steps)
             conf_int = forecast_df.conf_int(alpha=0.05)
 
-            # Create date range
+            # Create business day date range (exclude Fridays and Saturdays)
             last_date = self._training_data.index[-1]
             if isinstance(last_date, date | datetime):
-                forecast_dates = pd.date_range(
-                    start=last_date + timedelta(days=1),
-                    periods=steps,
-                    freq="D",
+                # Use business day utility to generate dates
+                forecast_dates = generate_business_day_dates(
+                    start_date=last_date,
+                    num_days=steps,
+                    exclude_time=True,
                 )
             else:
-                forecast_dates = range(
-                    len(self._training_data), len(self._training_data) + steps
-                )
+                forecast_dates = [str(i) for i in range(steps)]
 
             # Build result
             return ForecastResult(
-                dates=[str(d) for d in forecast_dates],
+                dates=forecast_dates,
                 predictions=forecast.tolist(),
                 lower_bound=conf_int.iloc[:, 0].tolist(),
                 upper_bound=conf_int.iloc[:, 1].tolist(),

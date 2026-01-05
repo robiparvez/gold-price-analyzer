@@ -236,7 +236,7 @@ uv run streamlit run app.py
 
 ## 💻 Usage Examples
 
-### Advanced 9-Model Forecasting (NEW)
+### Advanced 9-Model Forecasting
 
 ```python
 from services.gold_price_service import GoldPriceService

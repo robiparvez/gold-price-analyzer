@@ -5,8 +5,13 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from catboost import CatBoostRegressor
 
+try:
+    from catboost import CatBoostRegressor
+except ImportError:
+    CatBoostRegressor = None
+
+from components.business_day_utils import generate_business_day_dates
 from components.feature_engineering import create_all_features
 from models.time_series_base import BaseTimeSeriesModel, ForecastResult, ModelMetadata
 
@@ -194,12 +199,12 @@ class CatBoostModel(BaseTimeSeriesModel):
                 last_features["lag_1"] = pred
                 last_price = pred
 
-            # Create forecast dates
+            # Create forecast dates (business days only)
             last_date = self._training_data.index[-1]
-            forecast_dates = pd.date_range(
-                start=last_date + pd.Timedelta(days=1),
-                periods=steps,
-                freq="D",
+            forecast_dates = generate_business_day_dates(
+                start_date=last_date,
+                num_days=steps,
+                exclude_time=True,
             )
 
             # Use simple bounds based on std of recent predictions
@@ -216,7 +221,7 @@ class CatBoostModel(BaseTimeSeriesModel):
             upper_bounds = [p + margin for p in predictions]
 
             return ForecastResult(
-                dates=[str(d) for d in forecast_dates],
+                dates=forecast_dates,
                 predictions=predictions,
                 lower_bound=lower_bounds,
                 upper_bound=upper_bounds,

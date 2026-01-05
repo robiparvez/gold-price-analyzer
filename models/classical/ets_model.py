@@ -5,12 +5,13 @@ Supports Error-Trend-Seasonal decomposition with automatic component selection.
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
+from components.business_day_utils import generate_business_day_dates
 from models.time_series_base import BaseTimeSeriesModel, ForecastResult, ModelMetadata
 
 logger = logging.getLogger(__name__)
@@ -318,22 +319,21 @@ class ETSModel(BaseTimeSeriesModel):
             lower_bounds = (forecast - margin).tolist()
             upper_bounds = (forecast + margin).tolist()
 
-            # Create date range
+            # Create business day date range (exclude Fridays and Saturdays)
             last_date = self._training_data.index[-1]
             if isinstance(last_date, date | datetime):
-                forecast_dates = pd.date_range(
-                    start=last_date + timedelta(days=1),
-                    periods=steps,
-                    freq="D",
+                # Use business day utility to generate dates
+                forecast_dates = generate_business_day_dates(
+                    start_date=last_date,
+                    num_days=steps,
+                    exclude_time=True,
                 )
             else:
-                forecast_dates = range(
-                    len(self._training_data), len(self._training_data) + steps
-                )
+                forecast_dates = [str(i) for i in range(steps)]
 
             # Build result
             return ForecastResult(
-                dates=[str(d) for d in forecast_dates],
+                dates=forecast_dates,
                 predictions=forecast.tolist(),
                 lower_bound=lower_bounds,
                 upper_bound=upper_bounds,
