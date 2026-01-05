@@ -52,7 +52,16 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["black>=25.9.0", "isort>=7.0.0", "mypy>=1.18.2", "pytest>=8.4.2"]
+dev = [
+    "black>=25.9.0",
+    "isort>=7.0.0",
+    "mypy>=1.18.2",
+    "pandas-stubs>=2.3.3.251201",
+    "pytest>=8.4.2",
+    "scikit-learn-stubs>=0.0.3",
+    "types-reportlab>=4.4.7.20251223",
+    "types-tensorflow>=2.18.0.20251008",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -96,6 +105,17 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = ["sliding_window\\.py$"]
+explicit_package_bases = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = [
+    "statsmodels.*",
+    "sklearn.*",
+    "plotly.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -14,11 +14,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-# Suppress TensorFlow deprecation warnings
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppress TensorFlow logging
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="tensorflow")
-warnings.filterwarnings("ignore", category=FutureWarning, module="tensorflow")
-
 from analyzer import AdvancedGoldPriceAnalyzer
 from backtesting import GoldPriceBacktester
 from database_schema import DatabaseSchema
@@ -29,6 +24,11 @@ from pdf_report_generator import generate_simple_report
 from scraper import GoldPriceScraper
 from services.gold_price_service import GoldPriceService
 from utils import format_price_bdt
+
+# Suppress TensorFlow deprecation warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppress TensorFlow logging
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="tensorflow")
+warnings.filterwarnings("ignore", category=FutureWarning, module="tensorflow")
 
 # Setup logging
 setup_logging()
