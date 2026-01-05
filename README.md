@@ -37,10 +37,34 @@ The Gold Price Analyzer is a sophisticated financial analysis platform designed 
 
 ### 🤖 Machine Learning & Forecasting
 
-- **Multi-Model Ensemble**: Prophet, Random Forest, XGBoost with weighted blending
-- **7-Day Price Predictions**: Short-term forecasting with confidence intervals
-- **Hyperparameter Optimization**: Optuna-powered model tuning
-- **Feature Importance Analysis**: Understand what drives price movements
+#### **Advanced 9-Model Ensemble System** ⭐ NEW
+
+- **Classical Models (2)**: ARIMA, ETS with automatic parameter tuning
+- **ML Enhanced Models (3)**: LightGBM, CatBoost, SVR with feature engineering
+- **Deep Learning Models (3)**: LSTM, GRU, TCN with sequence modeling
+- **Hybrid Model (1)**: LSTM-ARIMA combining neural networks with classical statistics
+
+#### **Intelligent Ensemble Methods**
+
+- **Weighted Mean**: Variance-based dynamic weighting for optimal accuracy
+- **Equal Weight**: Simple averaging for robustness
+- **Median**: Outlier-resistant aggregation
+- **Optuna-Optimized**: Bayesian hyperparameter optimization (30-50 trials)
+
+#### **Forecasting Capabilities**
+
+- **Flexible Horizon**: 1-30 day forecasting with configurable window
+- **Confidence Intervals**: 95% prediction bounds with ensemble uncertainty
+- **Model Comparison**: Side-by-side performance metrics (RMSE, MAE, R²)
+- **Caching System**: SQLite-based forecast caching for instant retrieval
+- **Legacy Support**: Prophet + Random Forest fallback option
+
+#### **Service Architecture**
+
+- **GoldPriceService**: Unified API wrapping orchestrator and optimizer
+- **ModelOrchestrator**: Manages all 9 models with auto-selection
+- **EnsembleOptimizer**: Optuna-powered weight optimization
+- **Performance Tracking**: Cache hit rates, error monitoring, request metrics
 
 ### 📊 Real-Time Data & Analytics
 
@@ -85,7 +109,7 @@ The Gold Price Analyzer is a sophisticated financial analysis platform designed 
 Gold Price Analyzer
 ├── 🎨 User Interface (app.py)
 │   ├── Current Analysis Dashboard
-│   ├── 7-Day ML Forecasting
+│   ├── Advanced 9-Model Forecasting ⭐ NEW
 │   ├── Historical Trends & Charts
 │   ├── Model Performance Metrics
 │   ├── Custom Prediction Tool
@@ -93,7 +117,26 @@ Gold Price Analyzer
 │   ├── Jewelry Pricing Calculator
 │   └── Backtesting Suite
 │
-├── 🤖 ML Engine (analyzer.py)
+├── 🤖 ML Engine (9-Model Ensemble) ⭐ NEW
+│   ├── Classical Models
+│   │   ├── ARIMA (Auto-ARIMA)
+│   │   └── ETS (Error-Trend-Seasonal)
+│   ├── ML Enhanced Models
+│   │   ├── LightGBM
+│   │   ├── CatBoost
+│   │   └── SVR (Support Vector Regression)
+│   ├── Deep Learning Models
+│   │   ├── LSTM (Long Short-Term Memory)
+│   │   ├── GRU (Gated Recurrent Unit)
+│   │   └── TCN (Temporal Convolutional Network)
+│   ├── Hybrid Models
+│   │   └── LSTM-ARIMA
+│   └── Orchestration Layer
+│       ├── ModelOrchestrator (9-Model Management)
+│       ├── EnsembleOptimizer (Optuna-Powered)
+│       └── GoldPriceService (Unified API)
+│
+├── 🧠 Legacy ML Engine (analyzer.py)
 │   ├── Prophet Time Series Model
 │   ├── Random Forest Regressor
 │   ├── XGBoost with Optuna Tuning
@@ -107,14 +150,16 @@ Gold Price Analyzer
 │   └── External Feeds (external_data_fetcher.py)
 │       └── FX Rates & Global Spot
 │
-├── 🗄️ Data Storage (database_schema.py)
-│   ├── DuckDB High-Performance Database
-│   ├── Prices Table (Live Data)
-│   ├── Historical_Prices Table (Time Series)
-│   ├── External_Data Table (Market Feeds)
-│   ├── Investment_Tracking Table (Transactions)
-│   ├── Investment_Goals Table (Targets)
-│   └── Portfolio Table (Holdings)
+├── 🗄️ Data Storage
+│   ├── DuckDB (Primary Database - database_schema.py)
+│   │   ├── Prices Table (Live Data)
+│   │   ├── Historical_Prices Table (Time Series)
+│   │   ├── External_Data Table (Market Feeds)
+│   │   ├── Investment_Tracking Table (Transactions)
+│   │   ├── Investment_Goals Table (Targets)
+│   │   └── Portfolio Table (Holdings)
+│   └── SQLite (Forecast Cache - services/gold_price_service.py)
+│       └── Cached forecast results with TTL
 │
 ├── 🧮 Business Logic
 │   ├── Jewelry Calculator (jewelry_pricing.py)
@@ -132,8 +177,12 @@ Gold Price Analyzer
 
 ```text
 External Sources → Scrapers → DuckDB → ML Models → Analysis → UI → Reports
-                      ↓
-               Validation → Backtesting → Optimization
+                      ↓                     ↓
+               Validation           9-Model Ensemble ⭐ NEW
+                                           ↓
+                                    Optuna Optimizer → Weighted Predictions
+                                           ↓
+                                    SQLite Cache → Instant Retrieval
 ```
 
 ## 🚀 Installation Guide
@@ -187,7 +236,86 @@ uv run streamlit run app.py
 
 ## 💻 Usage Examples
 
-### Basic Price Analysis
+### Advanced 9-Model Forecasting (NEW)
+
+```python
+from services.gold_price_service import GoldPriceService
+
+# Initialize service with all 9 models
+service = GoldPriceService()
+
+# Load and prepare historical data
+data = service.load_historical_data(purity="22K")
+
+# Train all models with 85/15 train/validation split
+service.train_models(data, val_split=0.15)
+
+# Optimize ensemble weights using Optuna (30 trials)
+service.optimize_ensemble(n_trials=30, timeout=300)
+
+# Generate 14-day forecast with optimized ensemble
+forecast_result = service.generate_forecast(
+    forecast_days=14,
+    use_cache=True
+)
+
+print(f"Ensemble RMSE: {forecast_result['ensemble_rmse']:.2f}")
+print(f"Best Model: {forecast_result['best_model']}")
+print(f"Optimized Weights: {forecast_result['ensemble_weights']}")
+
+# Access individual model predictions
+for model_name, predictions in forecast_result['model_forecasts'].items():
+    print(f"{model_name}: {predictions['forecast'][:3]}...")
+```
+
+### Model Comparison & Selection
+
+```python
+from models.orchestrator import ModelOrchestrator
+
+# Initialize orchestrator with all 9 models
+orchestrator = ModelOrchestrator()
+
+# Train and evaluate models
+train_results = orchestrator.train_all_models(
+    train_data=train_df,
+    val_data=val_df
+)
+
+# Compare model performance
+comparison_df = orchestrator.get_model_comparison()
+print(comparison_df[['model', 'rmse', 'mae', 'r2']].sort_values('rmse'))
+
+# Generate ensemble forecast with multiple methods
+ensemble_pred = orchestrator.get_ensemble_forecast(
+    forecast_days=7,
+    method='weighted_mean'  # Options: weighted_mean, equal_weight, median
+)
+```
+
+### Optuna-Powered Optimization
+
+```python
+from models.ensemble_optimizer import EnsembleOptimizer
+
+# Initialize optimizer with trained orchestrator
+optimizer = EnsembleOptimizer(orchestrator)
+
+# Run Bayesian optimization (50 trials, 10 min timeout)
+best_weights = optimizer.optimize_weights(
+    n_trials=50,
+    timeout=600,
+    pruner='median',
+    sampler='tpe'
+)
+
+print(f"Optimized RMSE: {optimizer.best_rmse:.2f}")
+print("Best Ensemble Weights:")
+for model, weight in best_weights.items():
+    print(f"  {model}: {weight:.3f}")
+```
+
+### Legacy Prophet + Random Forest (Backward Compatible)
 
 ```python
 from analyzer import AdvancedGoldPriceAnalyzer
@@ -220,6 +348,85 @@ print(f"Total price: {price.total_price} BDT")
 print(f"Making charges: {price.making_charges} BDT")
 print(f"VAT (5%): {price.vat_amount} BDT")
 ```
+
+## 🖥️ Streamlit UI User Guide ⭐ NEW
+
+### Advanced Forecasting Tab (9-Model System)
+
+#### Step 1: Configure Forecast Parameters
+
+1. **Forecast Horizon**: Select 1-30 days using the slider
+2. **Optimization**: Toggle "Optimize ensemble weights with Optuna"
+   - ✅ Enabled: 30-trial Bayesian optimization for best weights
+   - ❌ Disabled: Use equal-weight ensemble
+3. **Legacy Fallback**: Toggle "Use legacy forecast if advanced fails"
+   - Automatically uses Prophet + Random Forest if 9-model system encounters errors
+
+#### Step 2: Generate Forecast
+
+1. Click **"Generate Advanced Forecast"** button
+2. Watch progress indicators:
+   - 🔄 Loading historical data
+   - 🎯 Training 9 models with 85/15 train/val split
+   - 🔧 Optimizing ensemble weights (if enabled)
+   - 📈 Generating forecast with confidence intervals
+
+#### Step 3: Review Results
+
+**Training Results Section:**
+- ✅ Green checkmarks: Successfully trained models
+- ❌ Red X marks: Failed models (excluded from ensemble)
+- View which of the 9 models are contributing
+
+**Model Comparison Table:**
+- **RMSE**: Root Mean Squared Error (lower is better)
+- **MAE**: Mean Absolute Error (lower is better)
+- **R² Score**: Coefficient of determination (higher is better)
+- **Sort**: Click column headers to sort by performance
+
+**Ensemble Metadata:**
+- **Best Individual Model**: Highest-performing single model
+- **Ensemble RMSE**: Combined ensemble performance
+- **Optimized Weights**: Weight distribution across models (if optimization enabled)
+
+**Service Metrics:**
+- **Cache Hits**: Forecasts retrieved from cache
+- **Cache Misses**: Forecasts computed fresh
+- **Hit Rate**: Cache efficiency percentage
+- **Total Requests**: All forecast requests
+- **Errors**: Failed forecast attempts
+
+#### Step 4: Visualize & Export
+
+**Interactive Chart:**
+- Blue line: Historical prices
+- Red line: Ensemble forecast
+- Shaded area: 95% confidence interval
+- Hover for detailed values
+
+**Export Options:**
+1. **📊 Download Forecast CSV**: Date, forecast, lower/upper bounds
+2. **📋 Download Comparison CSV**: Full model comparison table
+3. **📄 Export to PDF**: Comprehensive report with all metrics
+
+### Model Information Reference
+
+**Classical Models (2):**
+- **ARIMA**: Statistical model for trending data
+- **ETS**: Error-Trend-Seasonal decomposition
+
+**ML Enhanced (3):**
+- **LightGBM**: Fast gradient boosting (Microsoft)
+- **CatBoost**: Categorical data specialist (Yandex)
+- **SVR**: Support Vector Regression for non-linear patterns
+
+**Deep Learning (3):**
+- **LSTM**: Sequence modeling with long-term memory
+- **GRU**: Efficient gated recurrent network
+- **TCN**: Temporal convolutions with dilations
+
+**Hybrid (1):**
+- **LSTM-ARIMA**: Neural network + statistical fusion
 
 ### Backtesting Models
 
@@ -333,9 +540,94 @@ calculator = JewelryPricingCalculator(
 
 ### Core Classes
 
-#### `AdvancedGoldPriceAnalyzer`
+#### `GoldPriceService` ⭐ NEW
 
-**Main ML analysis engine supporting multiple forecasting models.**
+**Unified service layer for 9-model forecasting with optimization and caching.**
+
+```python
+class GoldPriceService:
+    def __init__(self, cache_enabled: bool = True, cache_ttl: int = 3600)
+
+    def load_historical_data(self, purity: str = "22K", days_back: int = 365) -> pd.DataFrame
+        """Load historical price data from DuckDB."""
+
+    def train_models(self, data: pd.DataFrame, val_split: float = 0.15) -> dict
+        """Train all 9 models with train/validation split.
+        Returns: {model_name: success_status}"""
+
+    def optimize_ensemble(self, n_trials: int = 30, timeout: int = 300) -> dict
+        """Optimize ensemble weights using Optuna.
+        Returns: {weights: dict, rmse: float}"""
+
+    def generate_forecast(self, forecast_days: int = 7, use_cache: bool = True) -> dict
+        """Generate ensemble forecast with all trained models.
+        Returns: {
+            'forecast': list[float],
+            'lower_bound': list[float],
+            'upper_bound': list[float],
+            'model_forecasts': dict,
+            'ensemble_weights': dict,
+            'ensemble_rmse': float,
+            'best_model': str
+        }"""
+
+    def get_service_metrics(self) -> dict
+        """Get service performance metrics.
+        Returns: {cache_hits, cache_misses, hit_rate, total_requests, errors}"""
+
+    def clear_cache(self) -> None
+        """Clear all cached forecasts."""
+```
+
+#### `ModelOrchestrator` ⭐ NEW
+
+**Manages all 9 forecasting models with ensemble methods.**
+
+```python
+class ModelOrchestrator:
+    def __init__(self)
+
+    def train_all_models(self, train_data: pd.DataFrame,
+                        val_data: pd.DataFrame) -> dict[str, bool]
+        """Train all 9 models and return success status for each."""
+
+    def get_model_comparison(self) -> pd.DataFrame
+        """Get comparison table with RMSE, MAE, R² for all models."""
+
+    def get_ensemble_forecast(self, forecast_days: int = 7,
+                            method: str = 'weighted_mean') -> dict
+        """Generate ensemble forecast.
+        Methods: 'weighted_mean', 'equal_weight', 'median'"""
+
+    def get_available_models(self) -> list[str]
+        """List all 9 available model names."""
+```
+
+#### `EnsembleOptimizer` ⭐ NEW
+
+**Optuna-powered Bayesian optimization for ensemble weights.**
+
+```python
+class EnsembleOptimizer:
+    def __init__(self, orchestrator: ModelOrchestrator)
+
+    def optimize_weights(self, n_trials: int = 30, timeout: int = 300,
+                        pruner: str = 'median', sampler: str = 'tpe') -> dict[str, float]
+        """Optimize ensemble weights using Optuna.
+        Pruners: 'median', 'threshold', 'percentile'
+        Samplers: 'tpe', 'random', 'cmaes'"""
+
+    @property
+    def best_rmse(self) -> float
+        """Get best RMSE achieved during optimization."""
+
+    def get_optimization_history(self) -> pd.DataFrame
+        """Get trial-by-trial optimization results."""
+```
+
+#### `AdvancedGoldPriceAnalyzer` (Legacy)
+
+**Legacy ML analysis engine supporting Prophet + Random Forest.**
 
 ```python
 class AdvancedGoldPriceAnalyzer:
