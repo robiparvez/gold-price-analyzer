@@ -5,12 +5,19 @@ Complete solution with ML forecasting, investment tracking, jewelry pricing, and
 
 import asyncio
 import logging
+import os
+import warnings
 from datetime import datetime, timedelta
 
 import altair as alt
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+
+# Suppress TensorFlow deprecation warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppress TensorFlow logging
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="tensorflow")
+warnings.filterwarnings("ignore", category=FutureWarning, module="tensorflow")
 
 from analyzer import AdvancedGoldPriceAnalyzer
 from backtesting import GoldPriceBacktester
