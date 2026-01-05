@@ -3,44 +3,40 @@
 import hashlib
 import logging
 import pickle
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+import duckdb
 import pandas as pd
 
-from models.ensemble_optimizer import EnsembleOptimizer
-from models.orchestrator import ModelOrchestrator
-from models.time_series_base import ForecastResult
+from ml_models.ensemble_optimizer import EnsembleOptimizer
+from ml_models.orchestrator import ModelOrchestrator
+from ml_models.time_series_base import ForecastResult
 
 logger = logging.getLogger(__name__)
 
 
 class ForecastCache:
-    """Cache for storing forecast results."""
+    """Cache for storing forecast results using DuckDB."""
 
-    def __init__(self, cache_dir: str = ".cache", use_sqlite: bool = True):
+    def __init__(self, cache_dir: str = ".cache"):
         """Initialize cache.
 
         Args:
             cache_dir: Directory for cache files.
-            use_sqlite: Whether to use SQLite for caching (vs file-based).
         """
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
-        self.use_sqlite = use_sqlite
-
-        if use_sqlite:
-            self.db_path = self.cache_dir / "forecast_cache.db"
-            self._init_db()
+        self.db_path = self.cache_dir / "forecast_cache.duckdb"
+        self._init_db()
 
     def _init_db(self) -> None:
-        """Initialize SQLite database."""
-        with sqlite3.connect(self.db_path) as conn:
+        """Initialize DuckDB database."""
+        with duckdb.connect(str(self.db_path)) as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS forecasts (
-                    cache_key TEXT PRIMARY KEY,
+                    cache_key VARCHAR PRIMARY KEY,
                     result BLOB,
                     created_at TIMESTAMP,
                     accessed_at TIMESTAMP
@@ -73,34 +69,23 @@ class ForecastCache:
         """
         cache_key = self._get_cache_key(params)
 
-        if self.use_sqlite:
-            try:
-                with sqlite3.connect(self.db_path) as conn:
-                    cursor = conn.execute(
-                        "SELECT result FROM forecasts WHERE cache_key = ?",
-                        (cache_key,),
-                    )
-                    row = cursor.fetchone()
-                    if row:
-                        # Update accessed_at
-                        conn.execute(
-                            "UPDATE forecasts SET accessed_at = ? WHERE cache_key = ?",
-                            (datetime.now(), cache_key),
-                        )
-                        conn.commit()
-                        return pickle.loads(row[0])
-            except Exception as e:
-                logger.warning(f"Failed to retrieve from cache: {e}")
+        try:
+            with duckdb.connect(str(self.db_path)) as conn:
+                result = conn.execute(
+                    "SELECT result FROM forecasts WHERE cache_key = ?",
+                    [cache_key],
+                ).fetchone()
 
-        else:
-            # File-based cache
-            cache_file = self.cache_dir / f"{cache_key}.pkl"
-            if cache_file.exists():
-                try:
-                    with open(cache_file, "rb") as f:
-                        return pickle.load(f)
-                except Exception as e:
-                    logger.warning(f"Failed to load cache file: {e}")
+                if result:
+                    # Update accessed_at
+                    conn.execute(
+                        "UPDATE forecasts SET accessed_at = ? WHERE cache_key = ?",
+                        [datetime.now(), cache_key],
+                    )
+                    conn.commit()
+                    return pickle.loads(result[0])
+        except Exception as e:
+            logger.warning(f"Failed to retrieve from cache: {e}")
 
         return None
 
@@ -113,51 +98,32 @@ class ForecastCache:
         """
         cache_key = self._get_cache_key(params)
 
-        if self.use_sqlite:
-            try:
-                result_blob = pickle.dumps(result)
-                with sqlite3.connect(self.db_path) as conn:
-                    conn.execute(
-                        """
-                        INSERT INTO forecasts
-                        (cache_key, result, created_at, accessed_at)
-                        VALUES (?, ?, ?, ?)
-                        ON CONFLICT (cache_key) DO UPDATE SET
-                            result = EXCLUDED.result,
-                            accessed_at = EXCLUDED.accessed_at
-                        """,
-                        (cache_key, result_blob, datetime.now(), datetime.now()),
-                    )
-                    conn.commit()
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
-
-        else:
-            # File-based cache
-            cache_file = self.cache_dir / f"{cache_key}.pkl"
-            try:
-                with open(cache_file, "wb") as f:
-                    pickle.dump(result, f)
-            except Exception as e:
-                logger.warning(f"Failed to save cache file: {e}")
+        try:
+            result_blob = pickle.dumps(result)
+            with duckdb.connect(str(self.db_path)) as conn:
+                conn.execute(
+                    """
+                    INSERT INTO forecasts
+                    (cache_key, result, created_at, accessed_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT (cache_key) DO UPDATE SET
+                        result = EXCLUDED.result,
+                        accessed_at = EXCLUDED.accessed_at
+                    """,
+                    [cache_key, result_blob, datetime.now(), datetime.now()],
+                )
+                conn.commit()
+        except Exception as e:
+            logger.warning(f"Failed to cache result: {e}")
 
     def clear(self) -> None:
         """Clear all cached forecasts."""
-        if self.use_sqlite:
-            try:
-                with sqlite3.connect(self.db_path) as conn:
-                    conn.execute("DELETE FROM forecasts")
-                    conn.commit()
-            except Exception as e:
-                logger.warning(f"Failed to clear cache: {e}")
-
-        else:
-            # Remove all pickle files
-            for cache_file in self.cache_dir.glob("*.pkl"):
-                try:
-                    cache_file.unlink()
-                except Exception as e:
-                    logger.warning(f"Failed to delete cache file: {e}")
+        try:
+            with duckdb.connect(str(self.db_path)) as conn:
+                conn.execute("DELETE FROM forecasts")
+                conn.commit()
+        except Exception as e:
+            logger.warning(f"Failed to clear cache: {e}")
 
 
 class GoldPriceService:
@@ -173,7 +139,6 @@ class GoldPriceService:
         optimizer: EnsembleOptimizer | None = None,
         cache_enabled: bool = True,
         cache_dir: str = ".cache",
-        use_sqlite_cache: bool = True,
     ):
         """Initialize service.
 
@@ -182,15 +147,12 @@ class GoldPriceService:
             optimizer: EnsembleOptimizer instance. Created if None.
             cache_enabled: Whether to cache forecast results.
             cache_dir: Directory for cache files.
-            use_sqlite_cache: Whether to use SQLite for caching.
         """
         self.orchestrator = orchestrator or ModelOrchestrator()
         self.optimizer = optimizer or EnsembleOptimizer(self.orchestrator)
 
         self.cache_enabled = cache_enabled
-        self.cache = (
-            ForecastCache(cache_dir, use_sqlite_cache) if cache_enabled else None
-        )
+        self.cache = ForecastCache(cache_dir) if cache_enabled else None
 
         # Metrics tracking
         self._metrics = {

@@ -399,11 +399,13 @@ class GoldPriceScraper:
 if __name__ == "__main__":
     scraper = GoldPriceScraper()
     price_data, saved_files = scraper.scrape_and_save()
-    print(f"Scraped {sum(len(prices) for prices in price_data.values())} price entries")
-    print(f"Saved to: {', '.join(saved_files)}")
+    logger.info(
+        f"Scraped {sum(len(prices) for prices in price_data.values())} price entries"
+    )
+    logger.info(f"Saved to: {', '.join(saved_files)}")
 
     # Get simplified latest prices
     latest = scraper.get_latest_prices()
-    print("\nLatest Gold Prices:")
+    logger.info("Latest Gold Prices:")
     for purity, price in latest.items():
-        print(f"  {purity}: ৳{price:,.0f}/gram")
+        logger.info(f"  {purity}: ৳{price:,.0f}/gram")

@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.ensemble_optimizer import EnsembleOptimizer, OptimizerMetrics
-from models.orchestrator import ModelOrchestrator
+from ml_models.ensemble_optimizer import EnsembleOptimizer, OptimizerMetrics
+from ml_models.orchestrator import ModelOrchestrator
 
 
 @pytest.fixture

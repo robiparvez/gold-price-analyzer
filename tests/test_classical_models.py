@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.classical import ARIMAModel, ETSModel
+from ml_models.classical import ARIMAModel, ETSModel
 
 
 # Fixtures

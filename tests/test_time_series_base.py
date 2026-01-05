@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.model_registry import ModelRegistry
-from models.time_series_base import (
+from ml_models.model_registry import ModelRegistry
+from ml_models.time_series_base import (
     BaseTimeSeriesModel,
     EnsembleModel,
     ForecastResult,

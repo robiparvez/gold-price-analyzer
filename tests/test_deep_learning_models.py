@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.deep_learning import GRUModel, LSTMModel
+from ml_models.deep_learning import GRUModel, LSTMModel
 
 
 @pytest.fixture

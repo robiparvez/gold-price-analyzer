@@ -89,10 +89,10 @@ class TestForecastCache:
         """Test setting and getting cache with SQLite."""
         with tempfile.TemporaryDirectory() as tmpdir:
             X, y = small_time_series
-            cache = ForecastCache(cache_dir=tmpdir, use_sqlite=True)
+            cache = ForecastCache(cache_dir=tmpdir)
 
             # Create mock forecast result
-            from models.time_series_base import ForecastResult
+            from ml_models.time_series_base import ForecastResult
 
             forecast = ForecastResult(
                 dates=["2025-01-01", "2025-01-02"],
@@ -117,7 +117,7 @@ class TestForecastCache:
     def test_cache_miss(self):
         """Test cache miss."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            cache = ForecastCache(cache_dir=tmpdir, use_sqlite=True)
+            cache = ForecastCache(cache_dir=tmpdir)
 
             result = cache.get({"steps": 7, "method": "nonexistent"})
 
@@ -126,9 +126,9 @@ class TestForecastCache:
     def test_cache_clear(self):
         """Test cache clearing."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            from models.time_series_base import ForecastResult
+            from ml_models.time_series_base import ForecastResult
 
-            cache = ForecastCache(cache_dir=tmpdir, use_sqlite=True)
+            cache = ForecastCache(cache_dir=tmpdir)
 
             forecast = ForecastResult(
                 dates=["2025-01-01"],

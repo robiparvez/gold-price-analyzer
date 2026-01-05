@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.hybrid import HybridLSTMARIMAModel
+from ml_models.hybrid import HybridLSTMARIMAModel
 
 
 @pytest.fixture

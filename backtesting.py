@@ -369,9 +369,9 @@ if __name__ == "__main__":
         )
 
         if results:
-            print("\nBacktest Results:")
-            print(f"Total Predictions: {results['metrics']['total_predictions']}")
-            print(f"MAE: {results['metrics']['mae']:.2f} BDT/gram")
-            print(f"RMSE: {results['metrics']['rmse']:.2f} BDT/gram")
-            print(f"MAPE: {results['metrics']['mape']:.2f}%")
-            print(f"R² Score: {results['metrics']['r2_score']:.3f}")
+            logger.info("Backtest Results:")
+            logger.info(f"Total Predictions: {results['metrics']['total_predictions']}")
+            logger.info(f"MAE: {results['metrics']['mae']:.2f} BDT/gram")
+            logger.info(f"RMSE: {results['metrics']['rmse']:.2f} BDT/gram")
+            logger.info(f"MAPE: {results['metrics']['mape']:.2f}%")
+            logger.info(f"R² Score: {results['metrics']['r2_score']:.3f}")

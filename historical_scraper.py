@@ -439,20 +439,20 @@ async def main():
     if not historical_df.empty:
         # Save historical data
         saved_path = scraper.save_historical_data(historical_df)
-        print(f"Historical data saved to: {saved_path}")
+        logger.info(f"Historical data saved to: {saved_path}")
 
         # Display summary
-        print("\nHistorical Data Summary:")
-        print(f"Records: {len(historical_df)}")
-        print(
+        logger.info("Historical Data Summary:")
+        logger.info(f"Records: {len(historical_df)}")
+        logger.info(
             f"Date range: {historical_df['date'].min()} to {historical_df['date'].max()}"
         )
-        print(
+        logger.info(
             f"Price range: ৳{historical_df['price_bdt_per_gram'].min():,.0f} - ৳{historical_df['price_bdt_per_gram'].max():,.0f}"
         )
-        print(f"Sources: {', '.join(historical_df['source'].unique())}")
+        logger.info(f"Sources: {', '.join(historical_df['source'].unique())}")
     else:
-        print("No historical data could be fetched")
+        logger.warning("No historical data could be fetched")
 
 
 if __name__ == "__main__":

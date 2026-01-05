@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.ml_enhanced import CatBoostModel, LightGBMModel, SVRModel
+from ml_models.ml_enhanced import CatBoostModel, LightGBMModel, SVRModel
 
 
 # Fixtures

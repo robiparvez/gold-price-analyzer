@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from models.orchestrator import ModelOrchestrator
+from ml_models.orchestrator import ModelOrchestrator
 
 
 @pytest.fixture

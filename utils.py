@@ -69,18 +69,3 @@ def format_price_bdt_short(price: int | float) -> str:
         return f"{price / 1_000:.0f}K BDT"
     else:
         return f"{price:.0f} BDT"
-
-
-# Test the functions
-if __name__ == "__main__":
-    # Test cases
-    test_prices = [100, 1000, 10000, 100000, 1000000, 15000.50, 123456.78]
-
-    print("Testing format_price_bdt:")
-    for price in test_prices:
-        print(f"  {price} -> {format_price_bdt(price)}")
-        print(f"  {price} -> {format_price_bdt(price, decimals=0)}")
-
-    print("\nTesting format_price_bdt_short:")
-    for price in test_prices:
-        print(f"  {price} -> {format_price_bdt_short(price)}")
