@@ -4,6 +4,7 @@ This module provides LSTM implementation for time-series forecasting.
 """
 
 import logging
+from datetime import datetime
 
 import numpy as np
 import pandas as pd

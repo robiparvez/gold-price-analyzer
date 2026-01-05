@@ -168,6 +168,7 @@ uv sync --dev
 uv run black .
 uv run isort .
 uv run mypy .
+uv run ruff check .
 
 # Run tests
 uv run pytest

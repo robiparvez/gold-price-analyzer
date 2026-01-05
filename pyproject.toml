@@ -48,6 +48,7 @@ dependencies = [
     "statsmodels>=0.14.0",
     "lightgbm>=4.0.0",
     "catboost>=1.2.0",
+    "ruff>=0.14.10",
 ]
 
 [dependency-groups]
