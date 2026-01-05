@@ -7,7 +7,6 @@ enabling dynamic model discovery, instantiation, and metadata management.
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 from models.time_series_base import ModelMetadata
 
@@ -43,9 +42,9 @@ class ModelRegistry:
             directory.mkdir(parents=True, exist_ok=True)
 
         self.manifest_path = self.base_path / "model_manifest.json"
-        self.manifest: dict[str, dict[str, Any]] = self._load_manifest()
+        self.manifest: dict[str, dict[str, any]] = self._load_manifest()
 
-    def _load_manifest(self) -> dict[str, dict[str, Any]]:
+    def _load_manifest(self) -> dict[str, dict[str, any]]:
         """Load model manifest from disk.
 
         Returns:
@@ -255,7 +254,7 @@ class ModelRegistry:
 
         return best_model
 
-    def get_storage_stats(self) -> dict[str, Any]:
+    def get_storage_stats(self) -> dict[str, any]:
         """Get storage statistics for models.
 
         Returns:

@@ -24,13 +24,13 @@ class ModelMetadata:
     training_date_range: tuple[str, str]  # (start_date, end_date)
     trained_at: str
     model_path: str | None = None
-    hyperparameters: dict[str, Any] = field(default_factory=dict)
+    hyperparameters: dict[str, any] = field(default_factory=dict)
     metrics: dict[str, float] = field(default_factory=dict)
     feature_names: list[str] = field(default_factory=list)
     data_statistics: dict[str, float] = field(default_factory=dict)
     version: str = "1.0.0"
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, any]:
         """Convert metadata to dictionary."""
         return {
             "model_name": self.model_name,
@@ -48,7 +48,7 @@ class ModelMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ModelMetadata":
+    def from_dict(cls, data: dict[str, any]) -> "ModelMetadata":
         """Create metadata from dictionary."""
         return cls(**data)
 
@@ -63,9 +63,9 @@ class ForecastResult:
     upper_bound: list[float]
     confidence_level: float = 0.95
     model_name: str = ""
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, any] | None = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, any]:
         """Convert result to dictionary."""
         return {
             "dates": self.dates,
@@ -188,7 +188,7 @@ class BaseTimeSeriesModel(ABC):
         model_name: str,
         model_type: str,
         X: pd.DataFrame,
-        hyperparameters: dict[str, Any],
+        hyperparameters: dict[str, any],
         metrics: dict[str, float] | None = None,
         feature_names: list[str] | None = None,
     ) -> ModelMetadata:

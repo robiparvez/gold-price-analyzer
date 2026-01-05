@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -76,7 +75,7 @@ class LightGBMModel(BaseTimeSeriesModel):
         self._features = None
         self._feature_names = None
         self._normalization_params = None
-        self._diagnostics: dict[str, Any] = {}
+        self._diagnostics: dict[str, any] = {}
 
         # Store hyperparameters
         self.n_estimators = n_estimators

@@ -259,12 +259,13 @@ class TestEnsembleOptimizerIntegration:
             n_trials=3,
         )
 
-        
         # Optimize
         optimizer.optimize(X_train, y_train, X_val, y_val)
-        
+
         # Check metadata
-        forecast = optimizer.get_optimized_ensemble_forecast(steps=7)        # Should have multiple models in ensemble
+        forecast = optimizer.get_optimized_ensemble_forecast(
+            steps=7
+        )  # Should have multiple models in ensemble
         assert forecast.metadata["num_models"] > 1
         assert len(forecast.metadata["models_used"]) > 1
 

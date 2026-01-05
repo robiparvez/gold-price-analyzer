@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -68,7 +67,7 @@ class CatBoostModel(BaseTimeSeriesModel):
         self._features = None
         self._feature_names = None
         self._categorical_features = None
-        self._diagnostics: dict[str, Any] = {}
+        self._diagnostics: dict[str, any] = {}
 
         # Store hyperparameters
         self.iterations = iterations

@@ -1,7 +1,9 @@
-"""Temporal Convolution Network (TCN) for time series forecasting."""
+"""Temporal Convolutional Network (TCN) forecasting model.
+
+This module provides TCN implementation for time-series forecasting.
+"""
 
 import logging
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -103,7 +105,7 @@ class TCNModel(BaseTimeSeriesModel):
         self._feature_std = None
         self._target_mean = None
         self._target_std = None
-        self._diagnostics = {}
+        self._diagnostics: dict[str, any] = {}
 
     def _calculate_receptive_field(self) -> int:
         """Calculate receptive field size.

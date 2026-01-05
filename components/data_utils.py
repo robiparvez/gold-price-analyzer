@@ -7,7 +7,6 @@ limited historical data (6-month horizon).
 
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -403,7 +402,7 @@ def remove_outliers(
     return df_clean
 
 
-def get_recommended_models(dataset_info: DatasetInfo) -> dict[str, Any]:
+def get_recommended_models(dataset_info: DatasetInfo) -> dict[str, any]:
     """Get recommended models based on dataset characteristics.
 
     Args:

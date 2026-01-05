@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -67,7 +66,7 @@ class SVRModel(BaseTimeSeriesModel):
         self._normalization_params = None
         self._y_mean = None
         self._y_std = None
-        self._diagnostics: dict[str, Any] = {}
+        self._diagnostics: dict[str, any] = {}
 
         # Store hyperparameters
         self.kernel = kernel

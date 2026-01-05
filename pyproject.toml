@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Professional gold price analyzer with ML forecasting, investment tracking, jewelry pricing calculator, and comprehensive backtesting capabilities"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Gold Price Analyzer", email = "analyzer@goldprice.com" }]
+authors = [{ name = "Robiuzzaman Parvez", email = "parvezrobi@yahoo.com" }]
 keywords = [
     "gold",
     "price",

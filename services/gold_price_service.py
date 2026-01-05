@@ -291,7 +291,7 @@ class GoldPriceService:
             }
 
             if use_cache and self.cache_enabled:
-                cached_result = self.cache.get(cache_key)
+                cached_result = self.cache.get(cache_key) if self.cache else None
                 if cached_result:
                     self.logger.info("Forecast retrieved from cache")
                     self._metrics["cache_hits"] += 1
@@ -308,7 +308,7 @@ class GoldPriceService:
                 forecast = self.orchestrator.get_ensemble_forecast(steps=steps)
 
             # Cache result
-            if use_cache and self.cache_enabled:
+            if use_cache and self.cache_enabled and self.cache:
                 self.cache.set(cache_key, forecast)
 
             return forecast
@@ -367,7 +367,7 @@ class GoldPriceService:
 
     def clear_cache(self) -> None:
         """Clear all cached forecasts."""
-        if self.cache_enabled:
+        if self.cache_enabled and self.cache:
             self.cache.clear()
             self.logger.info("Cache cleared")
 

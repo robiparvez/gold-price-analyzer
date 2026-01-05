@@ -42,13 +42,13 @@ class ModelOrchestrator:
         self.auto_select_top_k = auto_select_top_k
 
         # Dictionary to store model instances
-        self.models = {}
+        self.models: dict[str, any] = {}
         self._init_models()
 
         # Cache trained models
-        self._trained_models = {}
-        self._model_metrics = {}
-        self._ensemble_weights = {}
+        self._trained_models: dict[str, any] = {}
+        self._model_metrics: dict[str, dict[str, float]] = {}
+        self._ensemble_weights: dict[str, float] = {}
 
         self.logger = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class ModelOrchestrator:
         # Confidence intervals from ensemble
         ensemble_std = np.std(ensemble_preds)
         min_margin = max(np.mean(ensemble_preds) * 0.02, 0.1)
-        margin = max(1.96 * ensemble_std, min_margin)
+        margin = float(max(1.96 * ensemble_std, min_margin))
 
         # Get dates from first valid model
         first_result = next(iter(top_models.values()))
@@ -256,8 +256,8 @@ class ModelOrchestrator:
         return ForecastResult(
             dates=first_result.dates,
             predictions=ensemble_preds,
-            lower_bound=[max(0, p - margin) for p in ensemble_preds],
-            upper_bound=[p + margin for p in ensemble_preds],
+            lower_bound=[float(max(0, p - margin)) for p in ensemble_preds],
+            upper_bound=[float(p + margin) for p in ensemble_preds],
             confidence_level=0.95,
             model_name="Ensemble",
             metadata={

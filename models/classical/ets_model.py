@@ -6,7 +6,6 @@ Supports Error-Trend-Seasonal decomposition with automatic component selection.
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -92,9 +91,9 @@ class ETSModel(BaseTimeSeriesModel):
         self._model = None
         self._fitted_model = None
         self._training_data = None
-        self._diagnostics = {}
+        self._diagnostics: dict[str, any] = {}
 
-    def _detect_seasonality(self, data: pd.Series) -> dict[str, Any]:
+    def _detect_seasonality(self, data: pd.Series) -> dict[str, any]:
         """Detect seasonal patterns in data.
 
         Args:
@@ -141,7 +140,7 @@ class ETSModel(BaseTimeSeriesModel):
                 "reason": f"Detection error: {e}",
             }
 
-    def _detect_trend(self, data: pd.Series) -> dict[str, Any]:
+    def _detect_trend(self, data: pd.Series) -> dict[str, any]:
         """Detect trend in data using simple linear regression.
 
         Args:
@@ -174,9 +173,7 @@ class ETSModel(BaseTimeSeriesModel):
             "trend_strength": (
                 "strong"
                 if r_squared > 0.7
-                else "moderate"
-                if r_squared > 0.3
-                else "weak"
+                else "moderate" if r_squared > 0.3 else "weak"
             ),
         }
 
@@ -264,20 +261,23 @@ class ETSModel(BaseTimeSeriesModel):
             self._fitted_model = self._model.fit(**fit_params)
 
             # Store diagnostics
-            self._diagnostics.update(
-                {
-                    "aic": self._fitted_model.aic,
-                    "bic": self._fitted_model.bic,
-                    "aicc": self._fitted_model.aicc,
-                    "smoothing_level": self._fitted_model.params["smoothing_level"],
-                    "smoothing_trend": self._fitted_model.params.get("smoothing_trend"),
-                    "smoothing_seasonal": self._fitted_model.params.get(
-                        "smoothing_seasonal"
-                    ),
-                    "residual_std": np.std(self._fitted_model.resid),
-                    "residual_mean": np.mean(self._fitted_model.resid),
-                }
-            )
+            if self._fitted_model is not None:
+                self._diagnostics.update(
+                    {
+                        "aic": self._fitted_model.aic,
+                        "bic": self._fitted_model.bic,
+                        "aicc": self._fitted_model.aicc,
+                        "smoothing_level": self._fitted_model.params["smoothing_level"],
+                        "smoothing_trend": self._fitted_model.params.get(
+                            "smoothing_trend"
+                        ),
+                        "smoothing_seasonal": self._fitted_model.params.get(
+                            "smoothing_seasonal"
+                        ),
+                        "residual_std": np.std(self._fitted_model.resid),
+                        "residual_mean": np.mean(self._fitted_model.resid),
+                    }
+                )
 
             logger.info(
                 f"ETS(trend={self.trend}, seasonal={self.seasonal}) fitted. "

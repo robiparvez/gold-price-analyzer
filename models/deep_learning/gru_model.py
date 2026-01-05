@@ -1,7 +1,9 @@
-"""GRU (Gated Recurrent Unit) deep learning model for time series forecasting."""
+"""GRU (Gated Recurrent Unit) forecasting model.
+
+This module provides GRU implementation for time-series forecasting.
+"""
 
 import logging
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -92,7 +94,7 @@ class GRUModel(BaseTimeSeriesModel):
         self._feature_std = None
         self._target_mean = None
         self._target_std = None
-        self._diagnostics = {}
+        self._diagnostics: dict[str, any] = {}
 
     def fit(
         self,

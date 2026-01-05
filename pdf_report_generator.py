@@ -7,7 +7,6 @@ This module creates professional PDF reports with charts, forecasts, and market 
 import io
 import logging
 from datetime import datetime
-from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -62,7 +61,7 @@ class GoldPriceReportGenerator:
         current_prices: dict[str, float],
         forecast_data: pd.DataFrame,
         historical_data: pd.DataFrame,
-        analysis_metrics: dict[str, Any],
+        analysis_metrics: dict[str, any],
         output_path: str,
     ) -> bool:
         """

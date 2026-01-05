@@ -6,7 +6,6 @@ import logging
 import logging.config
 import sys
 from pathlib import Path
-from typing import Any
 
 
 def setup_logging(log_level: str = "INFO", log_file: str = "app.log") -> None:
@@ -24,7 +23,7 @@ def setup_logging(log_level: str = "INFO", log_file: str = "app.log") -> None:
 
     log_path = log_dir / log_file
 
-    config: dict[str, Any] = {
+    config: dict[str, any] = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {

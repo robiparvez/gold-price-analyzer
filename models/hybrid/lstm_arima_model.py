@@ -1,7 +1,9 @@
-"""Hybrid LSTM-ARIMA model combining deep learning and classical methods."""
+"""Hybrid LSTM-ARIMA forecasting model.
+
+This module provides a hybrid model combining LSTM and ARIMA.
+"""
 
 import logging
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -101,7 +103,7 @@ class HybridLSTMARIMAModel(BaseTimeSeriesModel):
         self._arima_model = None
         self._training_data = None
         self._lstm_residuals = None
-        self._diagnostics = {}
+        self._diagnostics: dict[str, any] = {}
 
     def fit(
         self,

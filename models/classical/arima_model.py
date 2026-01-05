@@ -6,7 +6,6 @@ This module provides an ARIMA implementation optimized for limited historical da
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -95,9 +94,9 @@ class ARIMAModel(BaseTimeSeriesModel):
         self._model = None
         self._fitted_model = None
         self._training_data = None
-        self._diagnostics = {}
+        self._diagnostics: dict[str, any] = {}
 
-    def _check_stationarity(self, data: pd.Series) -> dict[str, Any]:
+    def _check_stationarity(self, data: pd.Series) -> dict[str, any]:
         """Perform Augmented Dickey-Fuller test for stationarity.
 
         Args:
@@ -114,7 +113,7 @@ class ARIMAModel(BaseTimeSeriesModel):
             "is_stationary": result[1] < 0.05,
         }
 
-    def _suggest_orders(self, data: pd.Series) -> dict[str, Any]:
+    def _suggest_orders(self, data: pd.Series) -> dict[str, any]:
         """Suggest ARIMA orders based on ACF/PACF analysis.
 
         Args:
@@ -257,16 +256,17 @@ class ARIMAModel(BaseTimeSeriesModel):
             self._fitted_model = self._model.fit()
 
             # Store diagnostics
-            self._diagnostics.update(
-                {
-                    "aic": self._fitted_model.aic,
-                    "bic": self._fitted_model.bic,
-                    "hqic": self._fitted_model.hqic,
-                    "converged": self._fitted_model.mle_retvals["converged"],
-                    "residual_std": np.std(self._fitted_model.resid),
-                    "residual_mean": np.mean(self._fitted_model.resid),
-                }
-            )
+            if self._fitted_model is not None:
+                self._diagnostics.update(
+                    {
+                        "aic": self._fitted_model.aic,
+                        "bic": self._fitted_model.bic,
+                        "hqic": self._fitted_model.hqic,
+                        "converged": self._fitted_model.mle_retvals["converged"],
+                        "residual_std": np.std(self._fitted_model.resid),
+                        "residual_mean": np.mean(self._fitted_model.resid),
+                    }
+                )
 
             logger.info(
                 f"ARIMA{self.order} fitted successfully. "

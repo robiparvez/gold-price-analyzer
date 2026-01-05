@@ -57,10 +57,10 @@ class EnsembleOptimizer:
         self.sampler_seed = sampler_seed
         self.verbose = verbose
 
-        self.best_weights = {}
+        self.best_weights: dict[str, float] = {}
         self.best_rmse = float("inf")
         self.best_method = "weighted_mean"
-        self.study = None
+        self.study: optuna.Study | None = None
         self.logger = logging.getLogger(__name__)
 
     def _calculate_rmse(self, y_true: pd.Series, y_pred: list) -> float:
@@ -186,6 +186,9 @@ class EnsembleOptimizer:
 
         # Run optimization
         logger.info(f"Starting optimization with {self.n_trials} trials...")
+        if self.study is None:
+            raise RuntimeError("Study not initialized")
+
         self.study.optimize(
             lambda trial: self._objective(trial, X_val, y_val),
             n_trials=self.n_trials,
@@ -284,7 +287,7 @@ class EnsembleOptimizer:
         # Confidence intervals
         ensemble_std = np.std(ensemble_preds)
         min_margin = max(np.mean(ensemble_preds) * 0.02, 0.1)
-        margin = max(1.96 * ensemble_std, min_margin)
+        margin = float(max(1.96 * ensemble_std, min_margin))
 
         # Get dates from first result
         first_result = next(iter(valid_models.values()))
@@ -292,8 +295,8 @@ class EnsembleOptimizer:
         return ForecastResult(
             dates=first_result.dates,
             predictions=ensemble_preds,
-            lower_bound=[max(0, p - margin) for p in ensemble_preds],
-            upper_bound=[p + margin for p in ensemble_preds],
+            lower_bound=[float(max(0, p - margin)) for p in ensemble_preds],
+            upper_bound=[float(p + margin) for p in ensemble_preds],
             confidence_level=0.95,
             model_name="OptimizedEnsemble",
             metadata={
