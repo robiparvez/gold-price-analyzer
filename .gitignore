@@ -46,9 +46,6 @@ data/
 *.csv
 *.tsv
 
-# Trained models and artifacts
-models/
-
 # Lockfiles
 *.lock
 pip-wheel-metadata/
@@ -149,7 +146,6 @@ data/*.db
 *.ipynb
 
 # Machine Learning
-models/
 *.pkl
 *.joblib
 
