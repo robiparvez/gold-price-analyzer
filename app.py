@@ -438,7 +438,7 @@ def display_forecast_table(forecast_results: dict) -> None:
     forecast_df["predicted_price"] = forecast_df["predicted_price"].round(0).astype(int)
     forecast_df["lower_bound"] = forecast_df["lower_bound"].round(0).astype(int)
     forecast_df["upper_bound"] = forecast_df["upper_bound"].round(0).astype(int)
-    
+
     # Handle confidence field (may not exist in advanced forecast)
     if "confidence" in forecast_df.columns:
         forecast_df["confidence"] = (forecast_df["confidence"] * 100).round(1)
@@ -479,12 +479,12 @@ def display_forecast_table(forecast_results: dict) -> None:
         "Lower Bound (BDT)",
         "Upper Bound (BDT)",
     ]
-    
+
     # Add confidence column if it exists
     if "confidence" in forecast_df.columns:
         columns_to_display.append("confidence")
         column_labels.append("Confidence %")
-    
+
     display_df = forecast_df[columns_to_display].copy()
     display_df.columns = column_labels
 

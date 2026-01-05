@@ -374,22 +374,26 @@ print(f"VAT (5%): {price.vat_amount} BDT")
 #### Step 3: Review Results
 
 **Training Results Section:**
+
 - ✅ Green checkmarks: Successfully trained models
 - ❌ Red X marks: Failed models (excluded from ensemble)
 - View which of the 9 models are contributing
 
 **Model Comparison Table:**
+
 - **RMSE**: Root Mean Squared Error (lower is better)
 - **MAE**: Mean Absolute Error (lower is better)
 - **R² Score**: Coefficient of determination (higher is better)
 - **Sort**: Click column headers to sort by performance
 
 **Ensemble Metadata:**
+
 - **Best Individual Model**: Highest-performing single model
 - **Ensemble RMSE**: Combined ensemble performance
 - **Optimized Weights**: Weight distribution across models (if optimization enabled)
 
 **Service Metrics:**
+
 - **Cache Hits**: Forecasts retrieved from cache
 - **Cache Misses**: Forecasts computed fresh
 - **Hit Rate**: Cache efficiency percentage
@@ -399,12 +403,14 @@ print(f"VAT (5%): {price.vat_amount} BDT")
 #### Step 4: Visualize & Export
 
 **Interactive Chart:**
+
 - Blue line: Historical prices
 - Red line: Ensemble forecast
 - Shaded area: 95% confidence interval
 - Hover for detailed values
 
 **Export Options:**
+
 1. **📊 Download Forecast CSV**: Date, forecast, lower/upper bounds
 2. **📋 Download Comparison CSV**: Full model comparison table
 3. **📄 Export to PDF**: Comprehensive report with all metrics
@@ -412,20 +418,24 @@ print(f"VAT (5%): {price.vat_amount} BDT")
 ### Model Information Reference
 
 **Classical Models (2):**
+
 - **ARIMA**: Statistical model for trending data
 - **ETS**: Error-Trend-Seasonal decomposition
 
 **ML Enhanced (3):**
+
 - **LightGBM**: Fast gradient boosting (Microsoft)
 - **CatBoost**: Categorical data specialist (Yandex)
 - **SVR**: Support Vector Regression for non-linear patterns
 
 **Deep Learning (3):**
+
 - **LSTM**: Sequence modeling with long-term memory
 - **GRU**: Efficient gated recurrent network
 - **TCN**: Temporal convolutions with dilations
 
 **Hybrid (1):**
+
 - **LSTM-ARIMA**: Neural network + statistical fusion
 
 ### Backtesting Models
