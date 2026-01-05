@@ -89,10 +89,15 @@ class DatabaseSchema:
                 timestamp TEXT NOT NULL,
                 date TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(date, metal, purity)
+                CONSTRAINT unique_price UNIQUE(date, metal, purity)
             )
         """
         )
+        # Create sequence for id if it doesn't exist
+        try:
+            conn.execute("CREATE SEQUENCE IF NOT EXISTS prices_id_seq START 1")
+        except Exception:
+            pass  # Sequence might already exist
         logger.info("Created/verified prices table")
 
     def _create_historical_prices_table(self, conn: duckdb.DuckDBPyConnection) -> None:
@@ -100,17 +105,24 @@ class DatabaseSchema:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS historical_prices (
-                id INTEGER,
+                id INTEGER PRIMARY KEY,
                 date DATE NOT NULL,
                 metal TEXT NOT NULL DEFAULT 'gold',
                 purity TEXT NOT NULL DEFAULT '22K',
                 price_bdt_per_gram REAL NOT NULL,
                 source TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(date, metal, purity, source)
+                CONSTRAINT unique_historical_price UNIQUE(date, metal, purity, source)
             )
         """
         )
+        # Create sequence for id if it doesn't exist
+        try:
+            conn.execute(
+                "CREATE SEQUENCE IF NOT EXISTS historical_prices_id_seq START 1"
+            )
+        except Exception:
+            pass  # Sequence might already exist
         logger.info("Created/verified historical_prices table")
 
     def _create_external_data_table(self, conn: duckdb.DuckDBPyConnection) -> None:
@@ -125,7 +137,7 @@ class DatabaseSchema:
                 gold_price_usd_per_gram REAL NOT NULL,
                 source TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(fetch_date)
+                CONSTRAINT unique_fetch_date UNIQUE(fetch_date)
             )
         """
         )
@@ -185,7 +197,7 @@ class DatabaseSchema:
                 profit_loss_bdt REAL DEFAULT 0.0,
                 profit_loss_percent REAL DEFAULT 0.0,
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(purity)
+                CONSTRAINT unique_purity UNIQUE(purity)
             )
         """
         )
@@ -205,9 +217,14 @@ class DatabaseSchema:
             conn = duckdb.connect(str(self.db_path))
             conn.execute(
                 """
-                INSERT OR REPLACE INTO external_data
+                INSERT INTO external_data
                 (fetch_date, usd_bdt_rate, gold_spot_price_usd, gold_price_usd_per_gram, source)
                 VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (fetch_date) DO UPDATE SET
+                    usd_bdt_rate = EXCLUDED.usd_bdt_rate,
+                    gold_spot_price_usd = EXCLUDED.gold_spot_price_usd,
+                    gold_price_usd_per_gram = EXCLUDED.gold_price_usd_per_gram,
+                    source = EXCLUDED.source
             """,
                 (
                     data.get("fetch_time", datetime.now().isoformat()),
@@ -313,10 +330,17 @@ class DatabaseSchema:
             conn = duckdb.connect(str(self.db_path))
             conn.execute(
                 """
-                INSERT OR REPLACE INTO portfolio
+                INSERT INTO portfolio
                 (purity, total_quantity_grams, average_cost_per_gram,
                  current_value_bdt, profit_loss_bdt, profit_loss_percent)
                 VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (purity) DO UPDATE SET
+                    total_quantity_grams = EXCLUDED.total_quantity_grams,
+                    average_cost_per_gram = EXCLUDED.average_cost_per_gram,
+                    current_value_bdt = EXCLUDED.current_value_bdt,
+                    profit_loss_bdt = EXCLUDED.profit_loss_bdt,
+                    profit_loss_percent = EXCLUDED.profit_loss_percent,
+                    last_updated = CURRENT_TIMESTAMP
             """,
                 (
                     purity,

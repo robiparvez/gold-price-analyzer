@@ -383,19 +383,29 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
                     price_bdt_per_gram REAL NOT NULL,
                     source TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(date, metal, purity, source)
+                    CONSTRAINT unique_historical_price UNIQUE(date, metal, purity, source)
                 )
             """
             )
+
+            # Create sequence for id if it doesn't exist
+            try:
+                conn.execute(
+                    "CREATE SEQUENCE IF NOT EXISTS historical_prices_id_seq START 1"
+                )
+            except Exception:
+                pass  # Sequence might already exist
 
             # Insert historical data
             for _, row in df.iterrows():
                 try:
                     conn.execute(
                         """
-                        INSERT OR REPLACE INTO historical_prices
-                        (date, metal, purity, price_bdt_per_gram, source)
-                        VALUES (?, ?, ?, ?, ?)
+                        INSERT INTO historical_prices
+                        (id, date, metal, purity, price_bdt_per_gram, source)
+                        VALUES (nextval('historical_prices_id_seq'), ?, ?, ?, ?, ?)
+                        ON CONFLICT (date, metal, purity, source) DO UPDATE SET
+                            price_bdt_per_gram = EXCLUDED.price_bdt_per_gram
                         """,
                         (
                             row["date"],
@@ -424,7 +434,7 @@ async def main():
     scraper = HistoricalGoldPriceScraper()
 
     # Fetch historical data
-    historical_df = await scraper.fetch_all_historical_data(days=90)
+    historical_df = await scraper.fetch_all_historical_data(days=180)
 
     if not historical_df.empty:
         # Save historical data

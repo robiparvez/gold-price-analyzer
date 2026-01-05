@@ -119,9 +119,12 @@ class ForecastCache:
                 with sqlite3.connect(self.db_path) as conn:
                     conn.execute(
                         """
-                        INSERT OR REPLACE INTO forecasts
+                        INSERT INTO forecasts
                         (cache_key, result, created_at, accessed_at)
                         VALUES (?, ?, ?, ?)
+                        ON CONFLICT (cache_key) DO UPDATE SET
+                            result = EXCLUDED.result,
+                            accessed_at = EXCLUDED.accessed_at
                         """,
                         (cache_key, result_blob, datetime.now(), datetime.now()),
                     )

@@ -312,9 +312,9 @@ class TestOrchestrationIntegration:
         is_different = not np.allclose(weighted_preds, equal_preds) or not np.allclose(
             equal_preds, median_preds
         )
-        assert is_different, (
-            "Different ensemble methods should produce different results"
-        )
+        assert (
+            is_different
+        ), "Different ensemble methods should produce different results"
 
     def test_model_caching_prevents_retraining(self, small_time_series):
         """Test that model caching works correctly."""

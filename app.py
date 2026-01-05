@@ -206,6 +206,10 @@ def generate_advanced_forecast(
         df_filtered = df_filtered.sort_values("date")
         df_filtered.set_index("date", inplace=True)
 
+        # Ensure DatetimeIndex has frequency information to avoid statsmodels warning
+        if not hasattr(df_filtered.index, "freq") or df_filtered.index.freq is None:
+            df_filtered.index.freq = "D"
+
         X = df_filtered[["price_bdt_per_gram"]].copy()
         y = df_filtered["price_bdt_per_gram"].copy()
 
@@ -815,6 +819,11 @@ def main():
             # Display results if available
             if st.session_state.get("forecast_generated", False):
                 forecast_results = st.session_state.forecast_results
+
+                # Load historical data for visualization
+                historical_df = load_historical_data(settings["days"])
+                if historical_df.empty:
+                    historical_df = fetch_and_save_historical_data(settings["days"])
 
                 # Display forecast metrics
                 st.markdown("### 📊 Forecast Summary")
