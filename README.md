@@ -37,7 +37,7 @@ The Gold Price Analyzer is a sophisticated financial analysis platform designed 
 
 ### 🤖 Machine Learning & Forecasting
 
-#### **Advanced 9-Model Ensemble System** ⭐ NEW
+#### **Advanced 9-Model Ensemble System**
 
 - **Classical Models (2)**: ARIMA, ETS with automatic parameter tuning
 - **ML Enhanced Models (3)**: LightGBM, CatBoost, SVR with feature engineering
@@ -109,7 +109,7 @@ The Gold Price Analyzer is a sophisticated financial analysis platform designed 
 Gold Price Analyzer
 ├── 🎨 User Interface (app.py)
 │   ├── Current Analysis Dashboard
-│   ├── Advanced 9-Model Forecasting ⭐ NEW
+│   ├── Advanced 9-Model Forecasting
 │   ├── Historical Trends & Charts
 │   ├── Model Performance Metrics
 │   ├── Custom Prediction Tool
@@ -117,7 +117,7 @@ Gold Price Analyzer
 │   ├── Jewelry Pricing Calculator
 │   └── Backtesting Suite
 │
-├── 🤖 ML Engine (9-Model Ensemble) ⭐ NEW
+├── 🤖 ML Engine (9-Model Ensemble)
 │   ├── Classical Models
 │   │   ├── ARIMA (Auto-ARIMA)
 │   │   └── ETS (Error-Trend-Seasonal)
@@ -178,7 +178,7 @@ Gold Price Analyzer
 ```text
 External Sources → Scrapers → DuckDB → ML Models → Analysis → UI → Reports
                       ↓                     ↓
-               Validation           9-Model Ensemble ⭐ NEW
+               Validation           9-Model Ensemble
                                            ↓
                                     Optuna Optimizer → Weighted Predictions
                                            ↓
@@ -349,7 +349,7 @@ print(f"Making charges: {price.making_charges} BDT")
 print(f"VAT (5%): {price.vat_amount} BDT")
 ```
 
-## 🖥️ Streamlit UI User Guide ⭐ NEW
+## 🖥️ Streamlit UI User Guide
 
 ### Advanced Forecasting Tab (9-Model System)
 
@@ -550,7 +550,7 @@ calculator = JewelryPricingCalculator(
 
 ### Core Classes
 
-#### `GoldPriceService` ⭐ NEW
+#### `GoldPriceService`
 
 **Unified service layer for 9-model forecasting with optimization and caching.**
 
@@ -589,7 +589,7 @@ class GoldPriceService:
         """Clear all cached forecasts."""
 ```
 
-#### `ModelOrchestrator` ⭐ NEW
+#### `ModelOrchestrator`
 
 **Manages all 9 forecasting models with ensemble methods.**
 
@@ -613,7 +613,7 @@ class ModelOrchestrator:
         """List all 9 available model names."""
 ```
 
-#### `EnsembleOptimizer` ⭐ NEW
+#### `EnsembleOptimizer`
 
 **Optuna-powered Bayesian optimization for ensemble weights.**
 
