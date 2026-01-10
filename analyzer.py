@@ -135,7 +135,7 @@ class AdvancedGoldPriceAnalyzer:
             "price_volatility": float(prices.std()),
             "total_records": len(prices),
             "latest_date": (
-                filtered_df["date"].max().strftime("%Y-%m-%d")
+                pd.to_datetime(filtered_df["date"]).max().strftime("%Y-%m-%d")
                 if not filtered_df.empty
                 else ""
             ),

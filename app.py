@@ -415,10 +415,18 @@ def display_forecast_metrics(forecast_results: dict) -> None:
             sum(daily_changes) / len(daily_changes) if daily_changes else 0
         )
 
+        # Determine trend direction
+        if avg_daily_change > 0.01:  # Small threshold to avoid floating point issues
+            trend = "↑ Up"
+        elif avg_daily_change < -0.01:
+            trend = "↓ Down"
+        else:
+            trend = "→ Flat"
+
         st.metric(
             label="Avg Daily Change",
             value=format_price_bdt(abs(avg_daily_change), decimals=0),
-            delta=f"{'Up' if avg_daily_change > 0 else 'Down'}",
+            delta=trend,
             help="Average predicted daily price change",
         )
 
@@ -443,9 +451,12 @@ def display_forecast_table(forecast_results: dict) -> None:
 
     # Create DataFrame for display
     forecast_df = pd.DataFrame(forecasts)
-    forecast_df["date"] = pd.to_datetime(forecast_df["date"]).dt.strftime(
-        "%Y-%m-%d (%a)"
-    )
+    # Ensure dates are strings without time component
+    if "date" in forecast_df.columns:
+        # Handle both string and datetime dates
+        forecast_df["date"] = pd.to_datetime(forecast_df["date"]).dt.strftime(
+            "%Y-%m-%d (%a)"
+        )
     forecast_df["predicted_price"] = forecast_df["predicted_price"].round(0).astype(int)
     forecast_df["lower_bound"] = forecast_df["lower_bound"].round(0).astype(int)
     forecast_df["upper_bound"] = forecast_df["upper_bound"].round(0).astype(int)
@@ -1061,7 +1072,7 @@ def main():
                             with col2:
                                 st.metric(
                                     "Date Range",
-                                    f"{filtered_df['date'].min()} to {filtered_df['date'].max()}",
+                                    f"{pd.to_datetime(filtered_df['date']).min().strftime('%Y-%m-%d')} to {pd.to_datetime(filtered_df['date']).max().strftime('%Y-%m-%d')}",
                                 )
                             with col3:
                                 st.metric(
@@ -1986,6 +1997,10 @@ def main():
                     # Transaction table
                     st.markdown("#### Recent Transactions")
                     display_df = filtered_df.copy()
+                    # Format date without time component
+                    display_df["transaction_date"] = pd.to_datetime(
+                        display_df["transaction_date"]
+                    ).dt.strftime("%Y-%m-%d")
                     display_df.columns = [
                         "Date",
                         "Type",
@@ -2416,6 +2431,10 @@ def main():
                                 # Detailed results table
                                 with st.expander("📋 Detailed Results"):
                                     display_results = results_df.copy()
+                                    # Format date without time component
+                                    display_results["date"] = pd.to_datetime(
+                                        display_results["date"]
+                                    ).dt.strftime("%Y-%m-%d")
                                     display_results["error_pct"] = (
                                         display_results["error"]
                                         / display_results["actual"]
