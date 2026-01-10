@@ -234,6 +234,121 @@ uv run python historical_scraper.py
 uv run streamlit run app.py
 ```
 
+## 💻 Usage Examples
+
+### Advanced 9-Model Forecasting
+
+```python
+from services.gold_price_service import GoldPriceService
+
+# Initialize service with all 9 models
+service = GoldPriceService()
+
+# Load and prepare historical data
+data = service.load_historical_data(purity="22K")
+
+# Train all models with 85/15 train/validation split
+service.train_models(data, val_split=0.15)
+
+# Optimize ensemble weights using Optuna (30 trials)
+service.optimize_ensemble(n_trials=30, timeout=300)
+
+# Generate 14-day forecast with optimized ensemble
+forecast_result = service.generate_forecast(
+    forecast_days=14,
+    use_cache=True
+)
+
+print(f"Ensemble RMSE: {forecast_result['ensemble_rmse']:.2f}")
+print(f"Best Model: {forecast_result['best_model']}")
+print(f"Optimized Weights: {forecast_result['ensemble_weights']}")
+
+# Access individual model predictions
+for model_name, predictions in forecast_result['model_forecasts'].items():
+    print(f"{model_name}: {predictions['forecast'][:3]}...")
+```
+
+### Model Comparison & Selection
+
+```python
+from models.orchestrator import ModelOrchestrator
+
+# Initialize orchestrator with all 9 models
+orchestrator = ModelOrchestrator()
+
+# Train and evaluate models
+train_results = orchestrator.train_all_models(
+    train_data=train_df,
+    val_data=val_df
+)
+
+# Compare model performance
+comparison_df = orchestrator.get_model_comparison()
+print(comparison_df[['model', 'rmse', 'mae', 'r2']].sort_values('rmse'))
+
+# Generate ensemble forecast with multiple methods
+ensemble_pred = orchestrator.get_ensemble_forecast(
+    forecast_days=7,
+    method='weighted_mean'  # Options: weighted_mean, equal_weight, median
+)
+```
+
+### Optuna-Powered Optimization
+
+```python
+from models.ensemble_optimizer import EnsembleOptimizer
+
+# Initialize optimizer with trained orchestrator
+optimizer = EnsembleOptimizer(orchestrator)
+
+# Run Bayesian optimization (50 trials, 10 min timeout)
+best_weights = optimizer.optimize_weights(
+    n_trials=50,
+    timeout=600,
+    pruner='median',
+    sampler='tpe'
+)
+
+print(f"Optimized RMSE: {optimizer.best_rmse:.2f}")
+print("Best Ensemble Weights:")
+for model, weight in best_weights.items():
+    print(f"  {model}: {weight:.3f}")
+```
+
+### Legacy Prophet + Random Forest (Backward Compatible)
+
+```python
+from analyzer import AdvancedGoldPriceAnalyzer
+
+# Initialize analyzer
+analyzer = AdvancedGoldPriceAnalyzer()
+
+# Generate 7-day forecast for 22K gold
+forecast = analyzer.generate_forecast(days=7, purity="22K")
+print(f"Predicted price: {forecast['prediction']} BDT/gram")
+```
+
+### Jewelry Price Calculation
+
+```python
+from jewelry_pricing import JewelryPricingCalculator
+
+# Initialize calculator
+calc = JewelryPricingCalculator()
+
+# Calculate price for 10g 22K necklace
+price = calc.calculate_jewelry_price(
+    weight_grams=10,
+    purity="22K",
+    item_type="necklace",
+    base_price_per_gram=8500
+)
+
+print(f"Total price: {price.total_price} BDT")
+print(f"Making charges: {price.making_charges} BDT")
+print(f"VAT (5%): {price.vat_amount} BDT")
+```
+
 ## 🖥️ Streamlit UI User Guide
 
 ### Advanced Forecasting Tab (9-Model System)
@@ -411,6 +526,195 @@ target-version = ['py310']
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+```
+
+### Runtime Configuration
+
+```python
+# Custom analyzer configuration
+analyzer = AdvancedGoldPriceAnalyzer(
+    data_dir="custom_data/",
+    models_dir="custom_models/"
+)
+
+# Custom jewelry calculator
+calculator = JewelryPricingCalculator(
+    vat_rate=0.05,  # 5% VAT
+    custom_making_charges={
+        "ring": {"22K": 800, "21K": 750}
+    }
+)
+```
+
+## 📚 API Documentation
+
+### Core Classes
+
+#### `GoldPriceService`
+
+**Unified service layer for 9-model forecasting with optimization and caching.**
+
+```python
+class GoldPriceService:
+    def __init__(self, cache_enabled: bool = True, cache_ttl: int = 3600)
+
+    def load_historical_data(self, purity: str = "22K", days_back: int = 365) -> pd.DataFrame
+        """Load historical price data from DuckDB."""
+
+    def train_models(self, data: pd.DataFrame, val_split: float = 0.15) -> dict
+        """Train all 9 models with train/validation split.
+        Returns: {model_name: success_status}"""
+
+    def optimize_ensemble(self, n_trials: int = 30, timeout: int = 300) -> dict
+        """Optimize ensemble weights using Optuna.
+        Returns: {weights: dict, rmse: float}"""
+
+    def generate_forecast(self, forecast_days: int = 7, use_cache: bool = True) -> dict
+        """Generate ensemble forecast with all trained models.
+        Returns: {
+            'forecast': list[float],
+            'lower_bound': list[float],
+            'upper_bound': list[float],
+            'model_forecasts': dict,
+            'ensemble_weights': dict,
+            'ensemble_rmse': float,
+            'best_model': str
+        }"""
+
+    def get_service_metrics(self) -> dict
+        """Get service performance metrics.
+        Returns: {cache_hits, cache_misses, hit_rate, total_requests, errors}"""
+
+    def clear_cache(self) -> None
+        """Clear all cached forecasts."""
+```
+
+#### `ModelOrchestrator`
+
+**Manages all 9 forecasting models with ensemble methods.**
+
+```python
+class ModelOrchestrator:
+    def __init__(self)
+
+    def train_all_models(self, train_data: pd.DataFrame,
+                        val_data: pd.DataFrame) -> dict[str, bool]
+        """Train all 9 models and return success status for each."""
+
+    def get_model_comparison(self) -> pd.DataFrame
+        """Get comparison table with RMSE, MAE, R² for all models."""
+
+    def get_ensemble_forecast(self, forecast_days: int = 7,
+                            method: str = 'weighted_mean') -> dict
+        """Generate ensemble forecast.
+        Methods: 'weighted_mean', 'equal_weight', 'median'"""
+
+    def get_available_models(self) -> list[str]
+        """List all 9 available model names."""
+```
+
+#### `EnsembleOptimizer`
+
+**Optuna-powered Bayesian optimization for ensemble weights.**
+
+```python
+class EnsembleOptimizer:
+    def __init__(self, orchestrator: ModelOrchestrator)
+
+    def optimize_weights(self, n_trials: int = 30, timeout: int = 300,
+                        pruner: str = 'median', sampler: str = 'tpe') -> dict[str, float]
+        """Optimize ensemble weights using Optuna.
+        Pruners: 'median', 'threshold', 'percentile'
+        Samplers: 'tpe', 'random', 'cmaes'"""
+
+    @property
+    def best_rmse(self) -> float
+        """Get best RMSE achieved during optimization."""
+
+    def get_optimization_history(self) -> pd.DataFrame
+        """Get trial-by-trial optimization results."""
+```
+
+#### `AdvancedGoldPriceAnalyzer` (Legacy)
+
+**Legacy ML analysis engine supporting Prophet + Random Forest.**
+
+```python
+class AdvancedGoldPriceAnalyzer:
+    def __init__(self, data_dir: str = "data", models_dir: str = "models")
+
+    def generate_forecast(self, days: int = 7, purity: str = "22K") -> dict
+    def train_prophet_model(self, df: pd.DataFrame) -> dict
+    def train_random_forest_model(self, df: pd.DataFrame) -> dict
+    def evaluate_model_accuracy(self, purity: str = "22K", test_days: int = 30) -> dict
+```
+
+#### `JewelryPricingCalculator`
+
+**Professional jewelry pricing with VAT and making charges.**
+
+```python
+class JewelryPricingCalculator:
+    def __init__(self, vat_rate: float = 0.05, custom_making_charges: dict = None)
+
+    def calculate_jewelry_price(self, weight_grams: float, purity: str,
+                               item_type: str, base_price_per_gram: float) -> JewelryPrice
+    def get_making_charge(self, item_type: str, purity: str) -> float
+```
+
+#### `GoldPriceBacktester`
+
+**Comprehensive model validation and performance testing.**
+
+```python
+class GoldPriceBacktester:
+    def __init__(self)
+
+    def rolling_window_backtest(self, df: pd.DataFrame, window_size: int = 30,
+                               forecast_horizon: int = 7, model_type: str = "ensemble") -> dict
+    def time_series_split_backtest(self, df: pd.DataFrame, n_splits: int = 5) -> dict
+```
+
+#### `DatabaseSchema`
+
+**DuckDB database management for all application data.**
+
+```python
+class DatabaseSchema:
+    def __init__(self, db_path: str = "data/gold_prices.db")
+
+    def create_all_tables(self) -> bool
+    def get_latest_prices(self, purity: str = "22K", limit: int = 100) -> pd.DataFrame
+    def record_investment(self, purity: str, quantity_grams: float,
+                         price_per_gram: float, transaction_type: str) -> bool
+```
+
+### Data Models
+
+#### `JewelryPrice` (dataclass)
+
+```python
+@dataclass
+class JewelryPrice:
+    base_price: float      # Base gold cost
+    vat_amount: float      # 5% VAT amount
+    making_charges: float  # Jeweler's charges
+    total_price: float     # Final price
+    weight_grams: float    # Item weight
+    purity: str           # Gold purity (18K/21K/22K)
+    item_type: str        # Jewelry type
+```
+
+### Utility Functions
+
+#### Price Formatting
+
+```python
+def format_price_bdt(price: float, decimals: int = 2) -> str
+# Format prices in Bangladeshi Taka with proper separators
+
+def format_price_bdt_short(price: float) -> str
+# Compact formatting for charts (K/M notation)
 ```
 
 ## 🤝 Contribution Guidelines

@@ -66,6 +66,12 @@ class DatabaseSchema:
             # Create portfolio table
             self._create_portfolio_table(conn)
 
+            # Create validation tables
+            self._create_validation_tables(conn)
+
+            # Create model versioning tables
+            self._create_model_versioning_tables(conn)
+
             conn.commit()
             conn.close()
             logger.info("All database tables created successfully")
@@ -202,6 +208,143 @@ class DatabaseSchema:
         """
         )
         logger.info("Created/verified portfolio table")
+
+    def _create_validation_tables(self, conn: duckdb.DuckDBPyConnection) -> None:
+        """Create forecast validation tables."""
+        # Forecast log table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forecast_log (
+                id INTEGER PRIMARY KEY,
+                forecast_date DATE NOT NULL,
+                target_date DATE NOT NULL,
+                purity TEXT NOT NULL,
+                forecasted_price REAL NOT NULL,
+                lower_bound REAL,
+                upper_bound REAL,
+                model_name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT unique_forecast UNIQUE(forecast_date, target_date, purity)
+            )
+        """
+        )
+
+        # Validation results table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS validation_results (
+                id INTEGER PRIMARY KEY,
+                validation_date DATE NOT NULL,
+                purity TEXT NOT NULL,
+                forecasted_price REAL NOT NULL,
+                actual_price REAL NOT NULL,
+                absolute_error REAL NOT NULL,
+                percentage_error REAL NOT NULL,
+                within_threshold BOOLEAN NOT NULL,
+                threshold_bdt REAL NOT NULL,
+                model_name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT unique_validation UNIQUE(validation_date, purity)
+            )
+        """
+        )
+
+        # Daily accuracy metrics table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS daily_accuracy_metrics (
+                id INTEGER PRIMARY KEY,
+                date DATE NOT NULL,
+                mae REAL NOT NULL,
+                mape REAL NOT NULL,
+                rmse REAL NOT NULL,
+                accuracy_rate REAL NOT NULL,
+                total_validations INTEGER NOT NULL,
+                within_threshold_count INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT unique_daily_metrics UNIQUE(date)
+            )
+        """
+        )
+
+        # Validation alerts table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS validation_alerts (
+                id INTEGER PRIMARY KEY,
+                alert_date TIMESTAMP NOT NULL,
+                alert_type TEXT NOT NULL,
+                purity TEXT NOT NULL,
+                discrepancy_bdt REAL NOT NULL,
+                forecasted_price REAL NOT NULL,
+                actual_price REAL NOT NULL,
+                message TEXT NOT NULL,
+                acknowledged BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+        )
+        logger.info("Created/verified validation tables")
+
+    def _create_model_versioning_tables(self, conn: duckdb.DuckDBPyConnection) -> None:
+        """Create model versioning and retraining tables."""
+        # Model versions table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS model_versions (
+                id INTEGER PRIMARY KEY,
+                version_id TEXT NOT NULL UNIQUE,
+                model_name TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                training_samples INTEGER NOT NULL,
+                training_start_date DATE NOT NULL,
+                training_end_date DATE NOT NULL,
+                validation_mae REAL NOT NULL,
+                validation_mape REAL NOT NULL,
+                validation_rmse REAL NOT NULL,
+                hyperparameters TEXT,
+                model_path TEXT,
+                is_active BOOLEAN DEFAULT FALSE,
+                notes TEXT,
+                CONSTRAINT unique_version UNIQUE(version_id)
+            )
+        """
+        )
+
+        # Retraining history table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS retraining_history (
+                id INTEGER PRIMARY KEY,
+                retrain_date TIMESTAMP NOT NULL,
+                trigger_type TEXT NOT NULL,
+                previous_version_id TEXT,
+                new_version_id TEXT,
+                previous_mae REAL,
+                new_mae REAL,
+                improvement REAL,
+                deployed BOOLEAN DEFAULT FALSE,
+                training_time_seconds REAL,
+                notes TEXT
+            )
+        """
+        )
+
+        # Scheduled tasks table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS scheduled_tasks (
+                id INTEGER PRIMARY KEY,
+                task_type TEXT NOT NULL,
+                frequency TEXT NOT NULL,
+                last_run TIMESTAMP,
+                next_run TIMESTAMP,
+                is_enabled BOOLEAN DEFAULT TRUE,
+                config TEXT
+            )
+        """
+        )
+        logger.info("Created/verified model versioning tables")
 
     def insert_external_data(self, data: dict) -> bool:
         """
