@@ -13,8 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import duckdb
 import pandas as pd
+
+from core import DatabaseConnectionManager
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,7 @@ class ModelRetrainingService:
             min_improvement_threshold: Minimum MAE improvement required to deploy new model.
         """
         self.db_path = Path(db_path)
+        self.db_manager = DatabaseConnectionManager(db_path)
         self.models_dir = Path(models_dir)
         self.models_dir.mkdir(parents=True, exist_ok=True)
         self.min_improvement_threshold = min_improvement_threshold
@@ -113,7 +115,7 @@ class ModelRetrainingService:
     def _init_versioning_tables(self) -> None:
         """Initialize model versioning tables."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Table for model versions
                 conn.execute(
                     """
@@ -201,7 +203,7 @@ class ModelRetrainingService:
             Tuple of (features DataFrame, target Series) or (None, None).
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Try historical_prices first
                 df = conn.execute(
                     f"""
@@ -415,7 +417,7 @@ class ModelRetrainingService:
                 )
 
             # Save to database
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM model_versions"
                 ).fetchone()[0]
@@ -459,7 +461,7 @@ class ModelRetrainingService:
     def _deploy_version(self, version_id: str) -> bool:
         """Deploy a model version as active."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Deactivate all versions
                 conn.execute("UPDATE model_versions SET is_active = FALSE")
 
@@ -491,7 +493,7 @@ class ModelRetrainingService:
     ) -> None:
         """Log retraining event."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM retraining_history"
                 ).fetchone()[0]
@@ -524,7 +526,7 @@ class ModelRetrainingService:
     def get_active_version(self) -> ModelVersion | None:
         """Get currently active model version."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 result = conn.execute(
                     """
                     SELECT version_id, model_name, created_at, training_samples,
@@ -559,7 +561,7 @@ class ModelRetrainingService:
     def get_version_history(self, limit: int = 10) -> list[ModelVersion]:
         """Get model version history."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 results = conn.execute(
                     f"""
                     SELECT version_id, model_name, created_at, training_samples,
@@ -605,7 +607,7 @@ class ModelRetrainingService:
         """
         try:
             # Check version exists
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 result = conn.execute(
                     "SELECT model_path FROM model_versions WHERE version_id = ?",
                     [version_id],
@@ -663,7 +665,7 @@ class ModelRetrainingService:
                     logger.warning("No active model version found")
                     return None
 
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 result = conn.execute(
                     "SELECT model_path FROM model_versions WHERE version_id = ?",
                     [version_id],
@@ -689,7 +691,7 @@ class ModelRetrainingService:
     def get_retraining_schedule(self) -> dict[str, Any]:
         """Get current retraining schedule."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 result = conn.execute(
                     """
                     SELECT task_type, frequency, last_run, next_run, is_enabled, config
@@ -743,7 +745,7 @@ class ModelRetrainingService:
             else:
                 next_run = now + timedelta(weeks=1)
 
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Check if exists
                 existing = conn.execute(
                     "SELECT id FROM scheduled_tasks WHERE task_type = 'model_retraining'"
@@ -796,7 +798,7 @@ class ModelRetrainingService:
         results = []
 
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 due_tasks = conn.execute(
                     """
                     SELECT task_type, config FROM scheduled_tasks
@@ -840,7 +842,7 @@ class ModelRetrainingService:
             DataFrame with version comparison.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 df = conn.execute(
                     f"""
                     SELECT

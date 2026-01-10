@@ -270,15 +270,11 @@ class GoldPriceScraper:
                 max_id_row[0] if max_id_row and max_id_row[0] is not None else 0
             ) + 1
 
-            # Insert data
+            # Prepare batch data for insertion (faster than row-by-row)
+            batch_data = []
             for metal, prices in price_data.items():
                 for price_entry in prices:
-                    conn.execute(
-                        """
-                        INSERT INTO prices
-                        (id, metal, purity, purity_raw, price_bdt_per_gram, price_raw, timestamp, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
+                    batch_data.append(
                         (
                             next_id,
                             metal,
@@ -288,17 +284,33 @@ class GoldPriceScraper:
                             price_entry["price_raw"],
                             price_entry["timestamp"],
                             price_entry["date"],
-                        ),
+                        )
                     )
                     next_id += 1
+
+            # Use executemany for batch insert
+            if batch_data:
+                conn.executemany(
+                    """
+                    INSERT INTO prices
+                    (id, metal, purity, purity_raw, price_bdt_per_gram, price_raw, timestamp, date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    batch_data,
+                )
+                logger.info(f"Batch inserted {len(batch_data)} price records")
 
             conn.commit()
             logger.info(f"Saved price data to DuckDB database: {db_path}")
 
             conn.close()
 
+        except duckdb.Error as e:
+            logger.error(f"Database error saving to DuckDB: {e}")
         except Exception as e:
-            logger.error(f"Error saving to DuckDB: {e}")
+            logger.error(f"Unexpected error saving to DuckDB: {e}")
+
+        return str(db_path)
 
         return str(db_path)
 

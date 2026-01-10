@@ -7,6 +7,8 @@ Handles Bangladesh gold market business days:
 
 from datetime import datetime, timedelta
 
+import numpy as np
+
 
 def is_business_day(date: datetime) -> bool:
     """Check if a date is a business day in Bangladesh.
@@ -76,6 +78,12 @@ def generate_business_day_dates(
     # Ensure start_date is a datetime
     if isinstance(start_date, str):
         start_date = datetime.fromisoformat(start_date)
+    elif isinstance(start_date, (int, np.integer)):
+        # If it's an integer (from RangeIndex), use current date
+        start_date = datetime.now()
+    elif hasattr(start_date, "to_pydatetime"):
+        # Handle pandas Timestamp
+        start_date = start_date.to_pydatetime()
 
     dates = []
     # Start from the day after the given date

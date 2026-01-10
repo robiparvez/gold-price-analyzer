@@ -56,8 +56,7 @@ The Gold Price Analyzer is a sophisticated financial analysis platform designed 
 - **Flexible Horizon**: 1-30 day forecasting with configurable window
 - **Confidence Intervals**: 95% prediction bounds with ensemble uncertainty
 - **Model Comparison**: Side-by-side performance metrics (RMSE, MAE, R²)
-- **Caching System**: SQLite-based forecast caching for instant retrieval
-- **Legacy Support**: Prophet + Random Forest fallback option
+- **Caching System**: DuckDB-based forecast caching for instant retrieval
 
 #### **Service Architecture**
 
@@ -136,11 +135,10 @@ Gold Price Analyzer
 │       ├── EnsembleOptimizer (Optuna-Powered)
 │       └── GoldPriceService (Unified API)
 │
-├── 🧠 Legacy ML Engine (analyzer.py)
-│   ├── Prophet Time Series Model
-│   ├── Random Forest Regressor
-│   ├── XGBoost with Optuna Tuning
-│   └── Ensemble Model Blending
+├── 🧠 Utility Functions (analyzer.py)
+│   ├── Data Loading & Statistics
+│   ├── Trend Analysis & Indicators
+│   └── Chart Generation
 │
 ├── 📡 Data Pipeline
 │   ├── Live Scraper (scraper.py)
@@ -315,19 +313,6 @@ for model, weight in best_weights.items():
     print(f"  {model}: {weight:.3f}")
 ```
 
-### Legacy Prophet + Random Forest (Backward Compatible)
-
-```python
-from analyzer import AdvancedGoldPriceAnalyzer
-
-# Initialize analyzer
-analyzer = AdvancedGoldPriceAnalyzer()
-
-# Generate 7-day forecast for 22K gold
-forecast = analyzer.generate_forecast(days=7, purity="22K")
-print(f"Predicted price: {forecast['prediction']} BDT/gram")
-```
-
 ### Jewelry Price Calculation
 
 ```python
@@ -356,11 +341,9 @@ print(f"VAT (5%): {price.vat_amount} BDT")
 #### Step 1: Configure Forecast Parameters
 
 1. **Forecast Horizon**: Select 1-30 days using the slider
-2. **Optimization**: Toggle "Optimize ensemble weights with Optuna"
+2. **Optimization**: Toggle "Use Optuna Optimization"
    - ✅ Enabled: 30-trial Bayesian optimization for best weights
-   - ❌ Disabled: Use equal-weight ensemble
-3. **Legacy Fallback**: Toggle "Use legacy forecast if advanced fails"
-   - Automatically uses Prophet + Random Forest if 9-model system encounters errors
+   - ❌ Disabled: Use weighted-mean ensemble based on variance
 
 #### Step 2: Generate Forecast
 
@@ -633,20 +616,6 @@ class EnsembleOptimizer:
 
     def get_optimization_history(self) -> pd.DataFrame
         """Get trial-by-trial optimization results."""
-```
-
-#### `AdvancedGoldPriceAnalyzer` (Legacy)
-
-**Legacy ML analysis engine supporting Prophet + Random Forest.**
-
-```python
-class AdvancedGoldPriceAnalyzer:
-    def __init__(self, data_dir: str = "data", models_dir: str = "models")
-
-    def generate_forecast(self, days: int = 7, purity: str = "22K") -> dict
-    def train_prophet_model(self, df: pd.DataFrame) -> dict
-    def train_random_forest_model(self, df: pd.DataFrame) -> dict
-    def evaluate_model_accuracy(self, purity: str = "22K", test_days: int = 30) -> dict
 ```
 
 #### `JewelryPricingCalculator`

@@ -171,13 +171,6 @@ models/ (before)          →  ml_models/ + models/ (after)
 - Tools and commands
 - Future documentation plans
 
-**`LEGACY_FILES.md`:**
-
-- Inventory of legacy code
-- Migration status tracking
-- Deprecated patterns list
-- Cleanup checklist
-
 **`MVC_REFACTORING.md`:**
 
 - Detailed progress report
@@ -286,7 +279,7 @@ logger.info(f"Price: {price.price_bdt_per_gram}")
 - [ ] app.py refactoring
 - [ ] Full test coverage
 - [ ] Documentation updates
-- [ ] Legacy code removal
+- [x] Legacy code removal
 
 ## 🎓 Lessons Learned
 
@@ -309,7 +302,6 @@ logger.info(f"Price: {price.price_bdt_per_gram}")
 - Data Models: See `models/` for examples
 - Repositories: See `repositories/` for CRUD operations
 - Migration Guide: See `MVC_REFACTORING.md`
-- Legacy Tracking: See `LEGACY_FILES.md`
 
 ---
 

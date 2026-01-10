@@ -33,13 +33,13 @@ class JewelryPricingCalculator:
 
     # Making charges by jewelry type (per gram)
     MAKING_CHARGES = {
-        "ring": {"22k": 800, "21k": 750, "18k": 600},
-        "necklace": {"22k": 1200, "21k": 1100, "18k": 900},
-        "bracelet": {"22k": 900, "21k": 850, "18k": 700},
-        "earrings": {"22k": 700, "21k": 650, "18k": 550},
-        "chain": {"22k": 1000, "21k": 950, "18k": 800},
-        "bangle": {"22k": 850, "21k": 800, "18k": 650},
-        "other": {"22k": 800, "21k": 750, "18k": 600},
+        "ring": {"22K": 800, "21K": 750, "18K": 600},
+        "necklace": {"22K": 1200, "21K": 1100, "18K": 900},
+        "bracelet": {"22K": 900, "21K": 850, "18K": 700},
+        "earrings": {"22K": 700, "21K": 650, "18K": 550},
+        "chain": {"22K": 1000, "21K": 950, "18K": 800},
+        "bangle": {"22K": 850, "21K": 800, "18K": 650},
+        "other": {"22K": 800, "21K": 750, "18K": 600},
     }
 
     def __init__(
@@ -64,7 +64,7 @@ class JewelryPricingCalculator:
         self,
         base_price_per_gram: float,
         weight_grams: float,
-        purity: Literal["22k", "21k", "18k"] = "22k",
+        purity: Literal["22K", "21K", "18K"] = "22K",
         item_type: Literal[
             "ring", "necklace", "bracelet", "earrings", "chain", "bangle", "other"
         ] = "other",
@@ -76,7 +76,7 @@ class JewelryPricingCalculator:
         Args:
             base_price_per_gram: Base gold price per gram (BDT)
             weight_grams: Weight of jewelry in grams
-            purity: Gold purity (22k, 21k, or 18k)
+            purity: Gold purity (22K, 21K, or 18K)
             item_type: Type of jewelry item
             custom_making_charge: Optional custom making charge per gram
 
@@ -121,7 +121,7 @@ class JewelryPricingCalculator:
         return result
 
     def get_making_charge_rate(
-        self, item_type: str = "other", purity: str = "22k"
+        self, item_type: str = "other", purity: str = "22K"
     ) -> float:
         """
         Get making charge rate for specific jewelry type and purity.
@@ -168,7 +168,7 @@ class JewelryPricingCalculator:
         self,
         base_price_per_gram: float,
         weight_grams: float,
-        purity: str = "22k",
+        purity: str = "22K",
     ) -> dict[str, JewelryPrice]:
         """
         Calculate prices for all jewelry types for comparison.

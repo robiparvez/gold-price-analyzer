@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-import duckdb
 import pandas as pd
 
+from core import DatabaseConnectionManager
 from scraper import GoldPriceScraper
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,7 @@ class ForecastValidationService:
         """
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(exist_ok=True)
+        self.db_manager = DatabaseConnectionManager(db_path)
         self.threshold_bdt = threshold_bdt
         self.scraper = scraper or GoldPriceScraper()
         self._init_validation_tables()
@@ -112,7 +113,7 @@ class ForecastValidationService:
     def _init_validation_tables(self) -> None:
         """Initialize validation tracking tables."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Table for storing forecasts before validation
                 conn.execute(
                     """
@@ -217,7 +218,7 @@ class ForecastValidationService:
             True if logged successfully.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Get next ID
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM forecast_log"
@@ -297,7 +298,7 @@ class ForecastValidationService:
 
             # Get forecasted price from log if not provided
             if forecasted_price is None:
-                with duckdb.connect(str(self.db_path)) as conn:
+                with self.db_manager.get_connection() as conn:
                     result = conn.execute(
                         """
                         SELECT forecasted_price FROM forecast_log
@@ -360,7 +361,7 @@ class ForecastValidationService:
     ) -> None:
         """Store validation result in database."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM validation_results"
                 ).fetchone()[0]
@@ -407,7 +408,7 @@ class ForecastValidationService:
                 f"Actual: {validation.actual_price:.0f} BDT"
             )
 
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM validation_alerts"
                 ).fetchone()[0]
@@ -473,7 +474,7 @@ class ForecastValidationService:
 
             today = datetime.now().strftime("%Y-%m-%d")
 
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 max_id = conn.execute(
                     "SELECT COALESCE(MAX(id), 0) FROM daily_accuracy_metrics"
                 ).fetchone()[0]
@@ -523,7 +524,7 @@ class ForecastValidationService:
             ValidationMetrics object.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Get validation results
                 df = conn.execute(
                     f"""
@@ -576,7 +577,7 @@ class ForecastValidationService:
             DataFrame with alerts.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 query = f"""
                     SELECT * FROM validation_alerts
                     WHERE alert_date >= CURRENT_DATE - INTERVAL '{days} days'
@@ -601,7 +602,7 @@ class ForecastValidationService:
             True if successful.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 conn.execute(
                     "UPDATE validation_alerts SET acknowledged = TRUE WHERE id = ?",
                     [alert_id],
@@ -625,7 +626,7 @@ class ForecastValidationService:
             DataFrame with validation history.
         """
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 query = f"""
                     SELECT
                         validation_date as date,
@@ -659,7 +660,7 @@ class ForecastValidationService:
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Get today's validations
                 today_df = conn.execute(
                     """
@@ -715,7 +716,7 @@ class ForecastValidationService:
     def _calculate_improvement_trend(self) -> dict[str, Any]:
         """Calculate if accuracy is improving over time."""
         try:
-            with duckdb.connect(str(self.db_path)) as conn:
+            with self.db_manager.get_connection() as conn:
                 # Get last 14 days of metrics
                 df = conn.execute(
                     """

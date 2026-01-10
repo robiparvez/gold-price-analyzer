@@ -367,7 +367,7 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
         df.to_csv(csv_path, index=False)
         logger.info(f"Saved {len(df)} historical records to {csv_path}")
 
-        # Save to DuckDB
+        # Save to DuckDB using batch operations for better performance
         try:
             db_path = self.data_dir / "gold_prices.db"
             conn = duckdb.connect(str(db_path))
@@ -393,13 +393,26 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
                 conn.execute(
                     "CREATE SEQUENCE IF NOT EXISTS historical_prices_id_seq START 1"
                 )
-            except Exception:
+            except duckdb.Error:
                 pass  # Sequence might already exist
 
-            # Insert historical data
+            # Prepare batch data for insertion (much faster than row-by-row)
+            batch_data = []
             for _, row in df.iterrows():
+                batch_data.append(
+                    (
+                        row["date"],
+                        row.get("metal", "gold"),
+                        row.get("purity", "22K"),
+                        row["price_bdt_per_gram"],
+                        row.get("source", "unknown"),
+                    )
+                )
+
+            # Use executemany for batch insert with ON CONFLICT handling
+            if batch_data:
                 try:
-                    conn.execute(
+                    conn.executemany(
                         """
                         INSERT INTO historical_prices
                         (id, date, metal, purity, price_bdt_per_gram, source)
@@ -407,24 +420,42 @@ class HistoricalGoldPriceScraper(GoldPriceScraper):
                         ON CONFLICT (date, metal, purity, source) DO UPDATE SET
                             price_bdt_per_gram = EXCLUDED.price_bdt_per_gram
                         """,
-                        (
-                            row["date"],
-                            row.get("metal", "gold"),
-                            row.get("purity", "22K"),
-                            row["price_bdt_per_gram"],
-                            row.get("source", "unknown"),
-                        ),
+                        batch_data,
                     )
-                except Exception as e:
-                    logger.warning(f"Failed to insert row: {e}")
-                    continue
+                    logger.info(f"Batch inserted {len(batch_data)} historical records")
+                except duckdb.Error as e:
+                    logger.warning(
+                        f"Batch insert failed, falling back to individual inserts: {e}"
+                    )
+                    # Fallback to individual inserts for problematic records
+                    success_count = 0
+                    for params in batch_data:
+                        try:
+                            conn.execute(
+                                """
+                                INSERT INTO historical_prices
+                                (id, date, metal, purity, price_bdt_per_gram, source)
+                                VALUES (nextval('historical_prices_id_seq'), ?, ?, ?, ?, ?)
+                                ON CONFLICT (date, metal, purity, source) DO UPDATE SET
+                                    price_bdt_per_gram = EXCLUDED.price_bdt_per_gram
+                                """,
+                                params,
+                            )
+                            success_count += 1
+                        except duckdb.Error as row_error:
+                            logger.warning(f"Failed to insert row: {row_error}")
+                    logger.info(
+                        f"Fallback inserted {success_count}/{len(batch_data)} records"
+                    )
 
             conn.commit()
             conn.close()
             logger.info(f"Saved historical data to DuckDB database: {db_path}")
 
+        except duckdb.Error as e:
+            logger.error(f"Database error saving to DuckDB: {e}")
         except Exception as e:
-            logger.error(f"Error saving to DuckDB: {e}")
+            logger.error(f"Unexpected error saving to DuckDB: {e}")
 
         return str(csv_path)
 

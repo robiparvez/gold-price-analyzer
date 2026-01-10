@@ -63,7 +63,6 @@
   - `controllers/README.md` - Controller guidelines
   - `views/README.md` - View guidelines
   - `docs/README.md` - Documentation guide
-- ✅ Created `LEGACY_FILES.md` - Legacy code tracking
 - ✅ Added `__init__.py` files to all packages
 
 ## 🚧 Next Steps
@@ -116,10 +115,9 @@ Extract views from `app.py` to `views/`:
 
 ### 13. Legacy Cleanup
 
-- Remove or archive legacy CSV files
-- Clean up unused imports
-- Remove deprecated code
-- Update all documentation
+- [x] Remove legacy CSV files
+- [x] Remove deprecated forecast code
+- [x] Update all documentation
 
 ## How to Use New Structure
 

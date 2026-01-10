@@ -372,11 +372,11 @@ Use this checklist to track progress:
   - [ ] app.py simplified to < 200 lines
   - [ ] All tabs working with new structure
 
-- [ ] __Phase 6: Cleanup__
-  - [ ] Remove legacy CSV files
-  - [ ] Archive old analyzer.py (replaced by ml_models)
-  - [ ] Archive old jewelry_pricing.py (replaced by service)
-  - [ ] Update all documentation
+- [x] __Phase 6: Cleanup__
+  - [x] Remove legacy CSV files
+  - [x] Remove deprecated forecast code
+  - [x] Remove LEGACY_FILES.md tracking doc
+  - [x] Update all documentation
   - [ ] Run full test suite
   - [ ] Run code quality checks (black, isort, mypy)
 
@@ -421,7 +421,6 @@ def calculate_stats(self, data: list[Price]) -> dict[str, float]:
 - __Data Models__: See `models/` for dataclass examples
 - __Repositories__: See `repositories/` for CRUD patterns
 - __Progress Tracking__: See `MVC_REFACTORING.md`
-- __Legacy Code__: See `LEGACY_FILES.md`
 
 ## Questions?
 

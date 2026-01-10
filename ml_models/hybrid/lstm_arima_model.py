@@ -159,7 +159,7 @@ class HybridLSTMARIMAModel(BaseTimeSeriesModel):
                 try:
                     lstm_result = self.lstm_model.predict(steps=1)
                     lstm_preds.append(lstm_result.predictions[0])
-                except Exception:
+                except (ValueError, RuntimeError):
                     # Fallback: use mean of window
                     lstm_preds.append(np.mean(X_windows[i]))
 
@@ -229,7 +229,7 @@ class HybridLSTMARIMAModel(BaseTimeSeriesModel):
                 try:
                     arima_forecast = self._arima_model.get_forecast(steps=steps)
                     arima_preds = arima_forecast.predicted_mean.values.tolist()
-                except Exception:
+                except (ValueError, np.linalg.LinAlgError):
                     # Fallback: use residual mean
                     arima_preds = [np.mean(self._lstm_residuals)] * steps
             else:

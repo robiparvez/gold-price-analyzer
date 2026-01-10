@@ -41,7 +41,7 @@ def format_price_bdt(price: int | float, decimals: int = 2) -> str:
 
         return f"{formatted_number} BDT"
 
-    except Exception:
+    except (locale.Error, ValueError, TypeError):
         # Fallback formatting if locale fails
         formatted_number = f"{price:,.{decimals}f}" if decimals > 0 else f"{price:,.0f}"
         return f"{formatted_number} BDT"

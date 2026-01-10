@@ -72,13 +72,19 @@ class DatabaseSchema:
             # Create model versioning tables
             self._create_model_versioning_tables(conn)
 
+            # Create indexes for performance
+            self._create_indexes(conn)
+
             conn.commit()
             conn.close()
             logger.info("All database tables created successfully")
             return True
 
+        except duckdb.Error as e:
+            logger.error(f"Database error creating tables: {e}")
+            return False
         except Exception as e:
-            logger.error(f"Error creating tables: {e}")
+            logger.error(f"Unexpected error creating tables: {e}")
             return False
 
     def _create_prices_table(self, conn: duckdb.DuckDBPyConnection) -> None:
@@ -102,7 +108,7 @@ class DatabaseSchema:
         # Create sequence for id if it doesn't exist
         try:
             conn.execute("CREATE SEQUENCE IF NOT EXISTS prices_id_seq START 1")
-        except Exception:
+        except duckdb.Error:
             pass  # Sequence might already exist
         logger.info("Created/verified prices table")
 
@@ -127,7 +133,7 @@ class DatabaseSchema:
             conn.execute(
                 "CREATE SEQUENCE IF NOT EXISTS historical_prices_id_seq START 1"
             )
-        except Exception:
+        except duckdb.Error:
             pass  # Sequence might already exist
         logger.info("Created/verified historical_prices table")
 
@@ -345,6 +351,73 @@ class DatabaseSchema:
         """
         )
         logger.info("Created/verified model versioning tables")
+
+    def _create_indexes(self, conn: duckdb.DuckDBPyConnection) -> None:
+        """Create database indexes for improved query performance.
+
+        Indexes are created on frequently queried columns such as
+        date, purity, and validation_date to speed up filtering operations.
+        """
+        # Prices table indexes
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_prices_date ON prices(date)")
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_prices_purity ON prices(purity)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_prices_date_purity ON prices(date, purity)"
+            )
+        except duckdb.Error as e:
+            logger.warning(f"Could not create prices indexes: {e}")
+
+        # Historical prices table indexes
+        try:
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_historical_date ON historical_prices(date)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_historical_purity ON historical_prices(purity)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_historical_date_purity ON historical_prices(date, purity)"
+            )
+        except duckdb.Error as e:
+            logger.warning(f"Could not create historical_prices indexes: {e}")
+
+        # Validation results table indexes
+        try:
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_validation_date ON validation_results(validation_date)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_validation_purity ON validation_results(purity)"
+            )
+        except duckdb.Error as e:
+            logger.warning(f"Could not create validation_results indexes: {e}")
+
+        # Investment tracking table indexes
+        try:
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_investment_date ON investment_tracking(transaction_date)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_investment_purity ON investment_tracking(purity)"
+            )
+        except duckdb.Error as e:
+            logger.warning(f"Could not create investment_tracking indexes: {e}")
+
+        # Model versions table indexes
+        try:
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_model_version_active ON model_versions(is_active)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_model_version_created ON model_versions(created_at)"
+            )
+        except duckdb.Error as e:
+            logger.warning(f"Could not create model_versions indexes: {e}")
+
+        logger.info("Created/verified database indexes")
 
     def insert_external_data(self, data: dict) -> bool:
         """
